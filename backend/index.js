@@ -7,17 +7,19 @@
 	Backend Server
 */
 const crypto         = require('node:crypto')
-const {sampleRecord} = require('./demo_record.js')
+const { Level }      = require('level')
 const fastify        = require('fastify')({
 	logger : true,
 })
+
+const db             = new Level('theaterTimeDB', { valueEncoding : 'json' })
 
 fastify.get('/timer_backend/', async (_, reply) => {
 	reply.type('application/json').code(200)
 	return { status : 'error', errMsg : 'no valid record' }
 })
 
-fastify.post('/timer_backend/add', (request, reply) => {
+fastify.post('/timer_backend/add', async (request, reply) => {
 	// TODO: add item
 	//const { timerID, secretToken } = request.params
 	reply.type('application/json').code(200)
@@ -29,10 +31,93 @@ fastify.post('/timer_backend/add', (request, reply) => {
 	}
 })
 
-fastify.get('/timer_backend/:timerID/:secretToken?', (request, reply) => {
+fastify.post('/timer_backend/set/:timerID/:secretToken', async (request, reply) => {
 	const { timerID, secretToken } = request.params
-	const timerRecord = timerID === '00sample00' ? sampleRecord : null
+	const timerRecord = await db.get(timerID)
+	const typeIDX     = request.body.idx
+	const itemIDX     = request.body.subIdx
 
+	if ( timerRecord !== null ) {
+		const adminHash = crypto.createHash('sha512').update(timerRecord.internals.adminPass, 'utf-8').digest('hex').slice(0, 10)
+
+		if ( secretToken !== adminHash ) {
+			reply.type('application/json').code(403)
+			return {
+				status      : 1,
+				status_msg  : 'credentials-failed',
+				timerID     : timerID,
+			}
+		}
+
+		switch ( request.body.type ) {
+			case 'switch' :
+				timerRecord.clientData.switches[typeIDX].status = !timerRecord.clientData.switches[typeIDX].status
+				break
+			case 'item' :
+				timerRecord.clientData.timers[typeIDX].items[itemIDX].status = !timerRecord.clientData.timers[typeIDX].items[itemIDX].status
+				break
+			case 'timer' :
+				timerRecord.clientData.timers[typeIDX].is_active = false
+				timerRecord.clientData.timers[typeIDX].is_done   = true
+
+				if ( !timerRecord.clientData.timers[typeIDX].is_down ) {
+					timerRecord.clientData.timers[typeIDX].elapse_total = (Date.now() - timerRecord.clientData.timers[typeIDX].time_was_start) / 1000
+				}
+
+				if ( typeof timerRecord.clientData.timers[typeIDX+1] !== 'undefined' ) {
+					timerRecord.clientData.timers[typeIDX+1].is_active = true
+					timerRecord.clientData.timers[typeIDX+1].time_was_start = Date.now()
+
+					if ( timerRecord.clientData.timers[typeIDX+1].reset_places ) {
+						for ( const [idx, switchData] of timerRecord.clientData.switches.entries() ) {
+							if ( switchData.id === 'places' ) {
+								timerRecord.clientData.switches[idx].status = false
+								break
+							}
+						}
+					}
+				}
+				break
+			case 'timer_back':
+				if ( typeof timerRecord.clientData.timers[typeIDX] !== 'undefined' ) {
+					timerRecord.clientData.timers[typeIDX].is_active      = false
+					timerRecord.clientData.timers[typeIDX].time_was_start = null
+					timerRecord.clientData.timers[typeIDX].is_done        = false
+					timerRecord.clientData.timers[typeIDX].elapse_total   = 0
+				}
+
+				if ( typeof timerRecord.clientData.timers[typeIDX-1] !== 'undefined' ) {
+					timerRecord.clientData.timers[typeIDX-1].elapse_total = 0
+					timerRecord.clientData.timers[typeIDX-1].is_active    = true
+					timerRecord.clientData.timers[typeIDX-1].is_done      = false
+				}
+				break
+			default :
+				break
+		}
+
+		await db.put(timerID, timerRecord)
+
+		reply.type('application/json').code(200)
+		return {
+			status      : 0,
+			status_msg  : 'ok',
+			timerID     : timerID,
+		}
+	}
+	reply.type('application/json').code(404)
+	return {
+		status      : 1,
+		status_msg  : 'record-not-found',
+		timerID     : timerID,
+	}
+})
+
+fastify.get('/timer_backend/read/:timerID/:secretToken?', async (request, reply) => {
+	const { timerID, secretToken } = request.params
+
+	const timerRecord = await db.get(timerID)
+	
 	if ( timerRecord !== null ) {
 		reply.type('application/json').code(200)
 		const adminHash = crypto.createHash('sha512').update(timerRecord.internals.adminPass, 'utf-8').digest('hex').slice(0, 10)
@@ -55,10 +140,9 @@ fastify.get('/timer_backend/:timerID/:secretToken?', (request, reply) => {
 })
 
 
-fastify.listen({ port : 3000 }, (err, address) => {
+fastify.listen({ port : 3000 }, (err) => {
 	if (err) {
 		fastify.log.error(err)
 		process.exit(1)
 	}
-	fastify.log.info(`server listening on ${address}`)
 })

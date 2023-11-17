@@ -7,6 +7,7 @@
 /* global QRious */
 let payload_data = null
 let isADMIN      = false
+let autoRefresh  = null
 
 const byID      = (elementID) => document.getElementById(elementID)
 const IDReplace = (elementID, is_danger, innerHTML) => {
@@ -38,6 +39,12 @@ const printTime = (secondsLeft, icon = '') => {
 	const hr_minLeft  = Math.floor((secondsLeft - hr_hourLeft*60*60) / 60)
 	const hr_secLeft  = Math.floor(secondsLeft - ((hr_hourLeft*60*60) + (hr_minLeft*60)))
 	return `${icon} ${hr_hourLeft.toString().padStart(2, 0)}:${hr_minLeft.toString().padStart(2, 0)}:${hr_secLeft.toString().padStart(2, 0)} ${icon}`
+}
+
+const printItemTime = (minutes) => {
+	const hours = Math.floor(minutes / 60)
+	const mins  = minutes - (hours * 60)
+	return `-${hours.toString().padStart(2, 0)}:${mins.toString().padStart(2, 0)}:00`
 }
 
 const parseTimer = (timerData) => {
@@ -72,23 +79,23 @@ const parseTimer = (timerData) => {
 	return printTime(secondsCount, indicator !== '' ? `<i class="bi ${indicator}"></i>` : '')
 }
 
-const printItemTime = (minutes) => {
-	const hours = Math.floor(minutes / 60)
-	const mins  = minutes - (hours * 60)
-	return `-${hours.toString().padStart(2, 0)}:${mins.toString().padStart(2, 0)}:00`
-}
+const makeExtras = (id, extraArray, isAdmin) => {
+	if ( typeof extraArray === 'undefined' || !isAdmin ) { return '' }
 
-const makeExtras = (id, extraArray) => {
-	if ( typeof extraArray === 'undefined' ) { return '' }
-	const returnHTML = []
-	returnHTML.push('<div class="list-group mt-2">')
+	const returnHTML = [
+		'<div class="list-group mt-2">'
+	]
+
 	for ( const [idx, thisItem] of extraArray.entries() ) {
+		const taskClass = thisItem.status ? 'list-group-item-success' : 'list-group-item-info'
+		const taskCheck = thisItem.status ? 'checked' : ''
+
 		returnHTML.push(`
-			<div class="list-group-item list-group-item-info d-flex justify-content-between align-items-start" id="${id}_${idx}_class">
+			<div class="list-group-item ${taskClass} d-flex justify-content-between align-items-start" id="${id}_${idx}_class">
 			<em>${printItemTime(thisItem.time)}</em>
 			${thisItem.name}
 			<div class="form-check">
-				<input class="form-check-input" onclick="clientItemButton('${id}', ${idx})" type="checkbox" value="" id="${id}_${idx}">
+				<input class="form-check-input" ${taskCheck} onclick="clientItemButton('${id}', ${idx})" type="checkbox" value="" id="${id}_${idx}">
 			</div>
 			</div>
 		`)
@@ -109,76 +116,61 @@ const makeSwitch = (switchData, isFirst, isAdmin) => {
 	</div>`
 }
 
-const makeTimer = (timerData, isFirst, isAdmin) => {
-	const timeString = parseTimer(timerData)
+const makeTimer = (timerData, isFirst, isLast, anyActive, isAdmin) => {
+	const timeString  = parseTimer(timerData)
+	const showButtons = isAdmin && (timerData.is_active || (isLast && !anyActive))
 	
 	return `<div class="card text-bg-light ${!isFirst ? 'mt-2' : ''}">
 		<div class="card-body text-center">
 			<h5 class="card-title">${timerData.name}</h5>
 			<span class="card-text h2 font-monospace" id="${timerData.id}">${timeString}</span>
-			${makeExtras(timerData.id, timerData.items)}
+			${makeExtras(timerData.id, timerData.items, isAdmin)}
 		</div>
-		${ timerData.is_active && isAdmin ?
-		`<div class="card-footer"><div onclick="clientTimeButton('${timerData.id}')" class="btn btn-sm btn-primary w-75 mx-auto d-block">COMPLETE ${timerData.name}</div></div>` :
-		'' }
+		${ showButtons ? '<div class="card-footer"><div class="btn-group w-100">' : '' }
+		${ isAdmin && timerData.is_active ? `<div onclick="clientTimeButton('${timerData.id}')" class="btn btn-sm btn-primary w-100">COMPLETE ${timerData.name}</div>` : ''}
+		${ !isFirst && showButtons ? `<div onclick="clientTimeRevButton('${timerData.id}', ${anyActive})" class="btn btn-sm btn-danger w-100">GO BACK</div>` : ''}
+		${ showButtons ? '</div></div>' : '' }
 	</div>`
 }
 
 const clientItemButton = (timerID, idx) => {
-	let currentIndex = -1
 	for ( const [timerIdx, timerData] of payload_data.timers.entries() ) {
 		if ( timerData.id === timerID ) {
-			currentIndex = timerIdx
+			setData('item', timerIdx, idx).then(() => { getData() })
 			break
 		}
 	}
-	payload_data.timers[currentIndex].items[idx].status = !payload_data.timers[currentIndex].items[idx].status
 }
 
-const clientTimeButton = (timerID) => {
-	let currentIndex = -1
-	let currentData = null
-	for ( const [idx, timerData] of payload_data.timers.entries() ) {
-		if ( timerData.id === timerID ) {
-			currentIndex = idx
-			currentData  = timerData
-			break
-		}
-	}
-
-	payload_data.timers[currentIndex].is_active = false
-	payload_data.timers[currentIndex].is_done   = true
-
-	if ( !currentData.is_down ) {
-		payload_data.timers[currentIndex].elapse_total = (Date.now() - payload_data.timers[currentIndex].time_was_start) / 1000
-	}
-
-	if ( typeof payload_data.timers[currentIndex+1] !== 'undefined' ) {
-		payload_data.timers[currentIndex+1].is_active = true
-		payload_data.timers[currentIndex+1].time_was_start = Date.now()
-
-		if ( payload_data.timers[currentIndex+1].reset_places ) {
-			for ( const [idx, switchData] of payload_data.switches.entries() ) {
-				if ( switchData.id === 'places' ) {
-					payload_data.switches[idx].status = false
-					break
-				}
+const clientTimeRevButton = (timerID, anyActive) => {
+	if ( !anyActive ) {
+		setData('timer_back', payload_data.timers.length).then(() => { getData() })
+	} else {
+		for ( const [idx, timerData] of payload_data.timers.entries() ) {
+			if ( timerData.id === timerID ) {
+				setData('timer_back', idx).then(() => { getData() })
+				break
 			}
 		}
 	}
+}
 
-	updateCounters(payload_data)
+const clientTimeButton = (timerID) => {
+	for ( const [idx, timerData] of payload_data.timers.entries() ) {
+		if ( timerData.id === timerID ) {
+			setData('timer', idx).then(() => { getData() })
+			break
+		}
+	}
 }
 
 const clientAdminButton = (buttonName) => {
 	for ( const [idx, switchData] of payload_data.switches.entries() ) {
 		if ( switchData.id === buttonName ) {
-			payload_data.switches[idx].status = !payload_data.switches[idx].status
+			setData('switch', idx).then(() => { getData() })
 			break
 		}
 	}
-
-	updateCounters(payload_data)
 	return false
 }
 
@@ -201,31 +193,38 @@ const runActiveCount = () => {
 	}
 }
 
-const updateCounters = (data) => {
+const updateCounters = () => {
 	//TODO : make this useful
 	const is_admin = isADMIN
 
 	if ( runningTimer !== null ) { clearInterval(runningTimer) }
 
 	const switchHTML = []
-	for ( const [idx, thisSwitch] of data.switches.entries() ) {
+	for ( const [idx, thisSwitch] of payload_data.switches.entries() ) {
 		switchHTML.push(makeSwitch(thisSwitch, idx === 0, is_admin))
 	}
 
 	const timerHTML = []
-	for ( const [idx, thisTimer] of data.timers.entries() ) {
-		timerHTML.push(makeTimer(thisTimer, idx === 0, is_admin))
+	let   anyActive = false
+	for ( const [idx, thisTimer] of payload_data.timers.entries() ) {
+		if ( thisTimer.is_active ) { anyActive = true }
+		timerHTML.push(makeTimer(
+			thisTimer,
+			idx === 0,
+			idx === payload_data.timers.length-1,
+			anyActive,
+			is_admin
+		))
 	}
 
-	const realStartTime = new Date(data.timers[0].time_to_end)
+	const realStartTime = new Date(payload_data.timers[0].time_to_end)
 
 	byID('dyn_timer_contain').innerHTML  = timerHTML.join('')
 	byID('dyn_switch_contain').innerHTML = switchHTML.join('')
-	byID('dyn_event_title').innerHTML    = data.info.title
-	byID('dyn_event_subtitle').innerHTML = data.info.subtitle
+	byID('dyn_event_title').innerHTML    = payload_data.info.title
+	byID('dyn_event_subtitle').innerHTML = payload_data.info.subtitle
 	byID('dyn_time_start').innerHTML     = `${realStartTime.getHours()%12 ? realStartTime.getHours()%12 : 12}:${realStartTime.getMinutes().toString().padStart(2, 0)} ${realStartTime.getHours()>11?'PM':'AM'}`
 
-	
 	for ( const switchData of payload_data.switches ) {
 		IDReplace(
 			`dyn_status_${switchData.id}`,
@@ -237,21 +236,44 @@ const updateCounters = (data) => {
 	runningTimer = setInterval(runActiveCount, 500)
 }
 
-const getData = () => {
+const setData = async (type, idx, subIdx = -1) => {
 	const [timerID, _, secretToken] = document.location.pathname.replace('/', '').split('/')
 
-	fetch(`/timer_backend/${timerID}/${secretToken}`)
+	const response = await fetch(`/timer_backend/set/${timerID}/${secretToken}`, {
+		body           : JSON.stringify( { type : type, idx : idx, subIdx : subIdx } ),
+		cache          : 'no-cache',
+		credentials    : 'same-origin',
+		headers        : { 'Content-Type' : 'application/json' },
+		method         : 'POST',
+		mode           : 'cors',
+		redirect       : 'follow',
+		referrerPolicy : 'no-referrer',
+	})
+	return response.json()
+}
+
+const getData = () => {
+	if ( autoRefresh !== null ) {
+		clearTimeout(autoRefresh)
+		autoRefresh = null
+	}
+
+	const [timerID, _, secretToken] = document.location.pathname.replace('/', '').split('/')
+
+	fetch(`/timer_backend/read/${timerID}/${secretToken}`)
 		.then( (response) => {
 			if (response.status !== 200) {
 				alert('An Error Occurred : invalid record')
 				return
 			}
-		
-			response.json().then((data) => {
-				payload_data = data.clientData
-				isADMIN      = data.isAdmin
 
-				updateCounters(payload_data)
+			response.json().then((data) => {
+				payload_data      = data.clientData
+				isADMIN           = data.isAdmin
+				const refreshTime = data.isAdmin ? 2500 : 15000
+
+				autoRefresh = setTimeout(getData, refreshTime)
+				updateCounters()
 			})
 		}).catch( (err) => {
 			alert(`An Error Occurred : ${err}`)
