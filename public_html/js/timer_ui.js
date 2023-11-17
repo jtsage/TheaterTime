@@ -4,9 +4,10 @@
     |_| |_|_|\___.<___| |_| \___.|_|  |_| |_||_|_|_|\___.
 	(c) 2023 J.T.Sage - ISC License
 */
-/* global QRious */
+/* global QRious, isADMIN, client_payload_data */
+let payload_data = null
 
-const byID = (elementID) => document.getElementById(elementID)
+const byID      = (elementID) => document.getElementById(elementID)
 const IDReplace = (elementID, is_danger, innerHTML) => {
 	const cls_remove =  is_danger ? 'text-bg-success' : 'text-bg-danger'
 	const cls_add    = !is_danger ? 'text-bg-success' : 'text-bg-danger'
@@ -29,81 +30,7 @@ const TaskClassSwap = (elementID, is_overdue, is_done) => {
 	}
 }
 
-const start_time = new Date()
-start_time.setHours(19)
-start_time.setMinutes(30)
-start_time.setSeconds(0)
-start_time.setMilliseconds(0)
-
 let runningTimer = null
-
-const payload_data = {
-	currentTimerIndex : 2,
-	info : {
-		title    : 'Some Example Theater',
-		subtitle : 'Some Example Show',
-	},
-	status : {
-		house  : false,
-		mics   : false,
-		places : false,
-	},
-	timers : [
-		{
-			elapse_total   : 0,
-			id             : 'timer_pre_show',
-			is_active      : true, // is running?
-			is_done        : false, // is finished?
-			is_down        : true, // is a countdown?
-			min_to_count   : null, // number of minutes of part
-			name           : 'Pre Show',
-			reset_places   : false, // reset the places flag when this starts
-			time_to_end    : start_time.getTime(), // e.g. 7:30PM today, from a real date obj
-			time_was_start : null, // timestamp (int) of start of this if countdown # of min or count up
-
-			items          : [
-				{ name : 'Turn on bass wireless', time : 30, status : false },
-				{ name : 'Turn off portrait lights', time : 5, status : false },
-			],
-		},
-		{
-			elapse_total   : 0,
-			id             : 'timer_act_1',
-			is_active      : false,
-			is_done        : false,
-			is_down        : false,
-			min_to_count   : null,
-			name           : 'Act 1',
-			reset_places   : false,
-			time_to_end    : null,
-			time_was_start : null,
-		},
-		{
-			elapse_total   : 0,
-			id             : 'timer_intermission',
-			is_active      : false,
-			is_done        : false,
-			is_down        : true,
-			min_to_count   : 15,
-			name           : 'Intermission',
-			reset_places   : true,
-			time_to_end    : null,
-			time_was_start : null,
-		},
-		{
-			elapse_total   : 0,
-			id             : 'timer_act_2',
-			is_active      : false,
-			is_done        : false,
-			is_down        : false,
-			min_to_count   : null,
-			name           : 'Act 2',
-			reset_places   : false,
-			time_to_end    : null,
-			time_was_start : null,
-		},
-	],
-}
 
 const printTime = (secondsLeft, icon = '') => {
 	const hr_hourLeft = Math.floor(secondsLeft / 60 / 60)
@@ -169,17 +96,28 @@ const makeExtras = (id, extraArray) => {
 	return returnHTML.join('')
 }
 
-const makeTimer = (timerData, isFirst) => {
+const makeSwitch = (switchData, isFirst, isAdmin) => {
+	return `<div class="card text-bg-danger ${!isFirst ? 'mt-2' : ''}" id="dyn_status_${switchData.id}_class">
+		<div class="card-body text-center">
+			<h5 class="card-title">STATUS :  ${switchData.name}</h5>
+			<p class="card-text" id="dyn_status_${switchData.id}_text">${switchData.switch_off}</p>
+		</div>
+		${ isAdmin ?
+		`<div class="card-footer"><div onclick="clientAdminButton('${switchData.id}')" class="btn btn-sm btn-primary w-75 mx-auto d-block">SWITCH</div></div>` :
+		'' }
+	</div>`
+}
+
+const makeTimer = (timerData, isFirst, isAdmin) => {
 	const timeString = parseTimer(timerData)
 	
 	return `<div class="card text-bg-light ${!isFirst ? 'mt-2' : ''}">
 		<div class="card-body text-center">
 			<h5 class="card-title">${timerData.name}</h5>
-			<p class="card-text small mb-0">Time ${timerData.is_down ? 'Remaining' : 'Elapsed'}</p>
 			<span class="card-text h2 font-monospace" id="${timerData.id}">${timeString}</span>
 			${makeExtras(timerData.id, timerData.items)}
 		</div>
-		${ timerData.is_active ?
+		${ timerData.is_active && isAdmin ?
 		`<div class="card-footer"><div onclick="clientTimeButton('${timerData.id}')" class="btn btn-sm btn-primary w-75 mx-auto d-block">COMPLETE ${timerData.name}</div></div>` :
 		'' }
 	</div>`
@@ -219,7 +157,12 @@ const clientTimeButton = (timerID) => {
 		payload_data.timers[currentIndex+1].time_was_start = Date.now()
 
 		if ( payload_data.timers[currentIndex+1].reset_places ) {
-			payload_data.status.places = false
+			for ( const [idx, switchData] of payload_data.switches.entries() ) {
+				if ( switchData.id === 'places' ) {
+					payload_data.switches[idx].status = false
+					break
+				}
+			}
 		}
 	}
 
@@ -227,19 +170,13 @@ const clientTimeButton = (timerID) => {
 }
 
 const clientAdminButton = (buttonName) => {
-	switch (buttonName) {
-		case 'mics' :
-			payload_data.status.mics = !payload_data.status.mics
+	for ( const [idx, switchData] of payload_data.switches.entries() ) {
+		if ( switchData.id === buttonName ) {
+			payload_data.switches[idx].status = !payload_data.switches[idx].status
 			break
-		case 'house' :
-			payload_data.status.house = !payload_data.status.house
-			break
-		case 'places' :
-			payload_data.status.places = !payload_data.status.places
-			break
-		default :
-			break
+		}
 	}
+
 	updateCounters(payload_data)
 	return false
 }
@@ -264,23 +201,37 @@ const runActiveCount = () => {
 }
 
 const updateCounters = (data) => {
+	//TODO : make this useful
+	const is_admin = isADMIN
+
 	if ( runningTimer !== null ) { clearInterval(runningTimer) }
+
+	const switchHTML = []
+	for ( const [idx, thisSwitch] of data.switches.entries() ) {
+		switchHTML.push(makeSwitch(thisSwitch, idx === 0, is_admin))
+	}
 
 	const timerHTML = []
 	for ( const [idx, thisTimer] of data.timers.entries() ) {
-		timerHTML.push(makeTimer(thisTimer, idx === 0))
+		timerHTML.push(makeTimer(thisTimer, idx === 0, is_admin))
 	}
 
 	const realStartTime = new Date(data.timers[0].time_to_end)
 
 	byID('dyn_timer_contain').innerHTML  = timerHTML.join('')
+	byID('dyn_switch_contain').innerHTML = switchHTML.join('')
 	byID('dyn_event_title').innerHTML    = data.info.title
 	byID('dyn_event_subtitle').innerHTML = data.info.subtitle
 	byID('dyn_time_start').innerHTML     = `${realStartTime.getHours()%12 ? realStartTime.getHours()%12 : 12}:${realStartTime.getMinutes().toString().padStart(2, 0)} ${realStartTime.getHours()>11?'PM':'AM'}`
 
-	IDReplace('dyn_status_places', !data.status.places, !data.status.places ? 'has NOT' : 'HAS')
-	IDReplace('dyn_status_house', !data.status.house, !data.status.house ? 'NOT open' : 'OPEN')
-	IDReplace('dyn_status_mics', !data.status.mics, !data.status.mics ? 'NOT ready' : 'READY')
+	
+	for ( const switchData of payload_data.switches ) {
+		IDReplace(
+			`dyn_status_${switchData.id}`,
+			!switchData.status,
+			!switchData.status ? switchData.switch_off : switchData.switch_on
+		)
+	}
 	
 	runningTimer = setInterval(runActiveCount, 500)
 }
@@ -296,6 +247,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			value   : `${window.location.href}?mobile=true`,
 		})
 	}
+
+	if ( typeof client_payload_data !== 'undefined' ) { payload_data = client_payload_data }
 
 	updateCounters(payload_data)
 })

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Theater Time</title>
+		<link href="css/bootstrap.min.css" rel="stylesheet">
+		<link href="css/bootstrap-icons.css" rel="stylesheet">
+		<script src="js/qrious.min.js"></script>
+		<script type="text/javascript">
+			const isADMIN = false
+		</script>
+		<script src="js/timer_demo_data.js"></script>
+		<script src="js/timer_ui.js"></script>
+
+		<link rel="apple-touch-icon" sizes="180x180" href="/icon/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="/icon/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/icon/favicon-16x16.png">
+		<link rel="manifest" href="/icon/site.webmanifest">
+		<link rel="mask-icon" href="/icon/safari-pinned-tab.svg" color="#5bbad5">
+		<link rel="shortcut icon" href="/icon/favicon.ico">
+		<meta name="msapplication-TileColor" content="#2d89ef">
+		<meta name="msapplication-config" content="/icon/browserconfig.xml">
+		<meta name="theme-color" content="#ffffff">
+	</head>
+	<body data-bs-theme="dark">
+		<div class="fixed-top pt-0 bg-primary-subtle" style="height: 40px" id="main-header">
+			<img src="icon/android-chrome-192x192.png" style="height: 36px; margin-top: 2px" class="img-fluid">
+			<h5 class="card-title d-inline align-middle">TheaterTime</h5>
+			<h6 class="card-subtitle mb-2 text-body-secondary d-inline align-middle" id="dyn_event_title">--</h6>
+			<h6 class="card-subtitle mb-2 text-body-tertiary d-inline align-middle" id="dyn_event_subtitle">--</h6>
+		</div>
+		<div class="container p-4" style="margin-top: 20px;">
+			<div class="card text-bg-primary">
+				<div class="card-body text-center">
+					<p class="card-text">Show is scheduled to start at <strong id="dyn_time_start">--:--</strong></p>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6 mt-3">
+					<div id="dyn_switch_contain"></div>
+
+					<div class="card text-bg-light mt-2" id="dyn_qr_code_class">
+						<div class="card-body text-center">
+							<h5 class="card-title">Mobile Version</h5>
+							<canvas id="dyn_qr_code" class="mx-auto"></canvas>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6 mt-3">
+					<div id="dyn_timer_contain"></div>
+				</div>
+			</div>
+		</div>
+
+		<footer class="footer fixed-bottom mt-auto bg-primary-subtle small border-top" id="main-footer">
+			<div class="container-fluid text-center">
+				<a href="https://github.com/jtsage/TheaterTime">TheaterTime</a> &copy;2023 J.T.Sage
+			</div>
+		</footer>
+		<script src="js/bootstrap.bundle.min.js"></script>
+	</body>
+</html>
