@@ -12,7 +12,6 @@ start_time.setSeconds(0)
 start_time.setMilliseconds(0)
 
 const client_payload_data = {
-	currentTimerIndex : 2,
 	info : {
 		title    : 'Some Example Theater',
 		subtitle : 'Some Example Show',
