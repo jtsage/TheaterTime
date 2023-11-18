@@ -20,6 +20,7 @@ const { Level }      = require('level')
 const fastify        = require('fastify')({ logger : true })
 const db             = new Level('theaterTimeDB', { valueEncoding : 'json' })
 const { demoRecord } = require('./data_demo_record.js')
+const fetch          = require('node-fetch')
 
 fastify.get('/timer_backend/reset_demo', async (_, reply) => {
 	db.put('00sample00', demoRecord).then(() => {
@@ -30,7 +31,9 @@ fastify.get('/timer_backend/reset_demo', async (_, reply) => {
 
 fastify.get('/timer_backend/remote_ip', async (request, reply) => {
 	reply.type('application/json').code(200)
-	return { ip : request.headers['x-real-ip'] }
+	const newPass = await fetch('https://www.dinopass.com/password/simple')
+
+	return { newPass : await newPass.text(), ip : request.headers['x-real-ip'] }
 })
 
 fastify.post('/timer_backend/hash_password', async (request, reply) => {
