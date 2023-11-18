@@ -263,20 +263,24 @@ const getData = () => {
 	fetch(`/timer_backend/read/${timerID}/${secretToken}`)
 		.then( (response) => {
 			if (response.status !== 200) {
-				alert('An Error Occurred : invalid record')
+				byID('dyn_error_not_found').classList.remove('d-none')
 				return
 			}
 
 			response.json().then((data) => {
+				const refreshTime = data.isAdmin ? 2500 : 15000
 				payload_data      = data.clientData
 				isADMIN           = data.isAdmin
-				const refreshTime = data.isAdmin ? 2500 : 15000
+				autoRefresh       = setTimeout(getData, refreshTime)
 
-				autoRefresh = setTimeout(getData, refreshTime)
+				byID('dyn_error_not_found').classList.add('d-none')
+				byID('dyn_error_offline').classList.add('d-none')
+
 				updateCounters()
 			})
-		}).catch( (err) => {
-			alert(`An Error Occurred : ${err}`)
+		}).catch( () => {
+			byID('dyn_error_offline').classList.remove('d-none')
+			autoRefresh = setTimeout(getData, 5 * 60 * 1000)
 		})
 }
 

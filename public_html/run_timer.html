@@ -27,6 +27,12 @@
 			<h6 class="card-subtitle mb-2 text-body-tertiary d-inline align-middle" id="dyn_event_subtitle">--</h6>
 		</div>
 		<div class="container p-4" style="margin-top: 20px;">
+			<div id="dyn_error_offline" class="text-center d-none alert alert-danger" role="alert">
+				Unable to contact backend, will retry every 5 minutes!
+			</div>
+			<div id="dyn_error_not_found" class="text-center d-none alert alert-danger" role="alert">
+				Timer record does not exist, will not retry!
+			</div>
 			<div class="card text-bg-primary">
 				<div class="card-body text-center">
 					<p class="card-text">Show is scheduled to start at <strong id="dyn_time_start">--:--</strong></p>

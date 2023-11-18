@@ -7,16 +7,13 @@
 	Demo Record
 */
 
-const { Level } = require('level')
-const db        = new Level('theaterTimeDB', { valueEncoding : 'json' })
-
 const sample_start_time = new Date()
 sample_start_time.setHours(19)
 sample_start_time.setMinutes(30)
 sample_start_time.setSeconds(0)
 sample_start_time.setMilliseconds(0)
 
-db.put('00sample00', {
+module.exports.demoRecord = {
 	internals : {
 		adminPass : 'cuteknot38',
 		ipAddress : '127.0.0.1',
@@ -105,7 +102,4 @@ db.put('00sample00', {
 			},
 		],
 	},
-}).then(() => {
-	/* eslint-disable no-console */
-	console.log('Sample Record Updated')
-})
+}

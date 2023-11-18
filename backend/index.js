@@ -4,19 +4,33 @@
     |_| |_|_|\___.<___| |_| \___.|_|  |_| |_||_|_|_|\___.
 	(c) 2023 J.T.Sage - ISC License
 
-	Backend Server
+	Backend Server - binds to localhost (127.0.0.1)
+
+	Note: Proxy to nginx or apache is assumed. See:
+	 - sample_nginx_config.txt
+	 - sample_apache_config.txt
 */
+
+// User configurable PORT.  If you change this,
+// change it in the sample config files as well!
+const PORT           = 3000
+
 const crypto         = require('node:crypto')
 const { Level }      = require('level')
-const fastify        = require('fastify')({
-	logger : true,
+const fastify        = require('fastify')({ logger : true })
+const db             = new Level('theaterTimeDB', { valueEncoding : 'json' })
+const { demoRecord } = require('./data_demo_record.js')
+
+fastify.get('/timer_backend/reset_demo', async (_, reply) => {
+	db.put('00sample00', demoRecord).then(() => {
+		reply.type('application/json').code(200)
+		return { status : 'ok', errMsg : 'demo record reset' }
+	})
 })
 
-const db             = new Level('theaterTimeDB', { valueEncoding : 'json' })
-
 fastify.get('/timer_backend/', async (_, reply) => {
-	reply.type('application/json').code(200)
-	return { status : 'error', errMsg : 'no valid record' }
+	reply.type('application/json').code(404)
+	return { status : 'error', errMsg : 'invalid-page' }
 })
 
 fastify.post('/timer_backend/add', async (request, reply) => {
@@ -140,7 +154,7 @@ fastify.get('/timer_backend/read/:timerID/:secretToken?', async (request, reply)
 })
 
 
-fastify.listen({ port : 3000 }, (err) => {
+fastify.listen({ port : PORT }, (err) => {
 	if (err) {
 		fastify.log.error(err)
 		process.exit(1)
