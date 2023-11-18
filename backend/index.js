@@ -28,9 +28,21 @@ fastify.get('/timer_backend/reset_demo', async (_, reply) => {
 	})
 })
 
-fastify.get('/timer_backend/', async (_, reply) => {
-	reply.type('application/json').code(404)
-	return { status : 'error', errMsg : 'invalid-page' }
+fastify.get('/timer_backend/remote_ip', async (request, reply) => {
+	reply.type('application/json').code(200)
+	return { ip : request.headers['x-real-ip'] }
+})
+
+fastify.post('/timer_backend/hash_password', async (request, reply) => {
+	const textPass = request.body.password
+	const hashPass = crypto.createHash('sha512').update(textPass, 'utf-8').digest('hex').slice(0, 10)
+	reply.type('application/json').code(200)
+	return { hashPass : hashPass }
+})
+
+fastify.get('/timer_backend/', async (request, reply) => {
+	reply.type('application/json').code(200)
+	return { orig : JSON.stringify(request.headers), status : 'error', errMsg : 'invalid-page' }
 })
 
 fastify.post('/timer_backend/add', async (request, reply) => {

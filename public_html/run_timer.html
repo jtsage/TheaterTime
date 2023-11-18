@@ -21,10 +21,17 @@
 	</head>
 	<body data-bs-theme="dark">
 		<div class="fixed-top pt-0 bg-primary-subtle" style="height: 40px" id="main-header">
-			<img src="/icon/android-chrome-192x192.png" style="height: 36px; margin-top: 2px" class="img-fluid">
-			<h5 class="card-title d-inline align-middle">TheaterTime</h5>
-			<h6 class="card-subtitle mb-2 text-body-secondary d-inline align-middle" id="dyn_event_title">--</h6>
-			<h6 class="card-subtitle mb-2 text-body-tertiary d-inline align-middle" id="dyn_event_subtitle">--</h6>
+			<div class="row">
+				<div class="col">
+					<img src="/icon/android-chrome-192x192.png" style="height: 36px; margin-top: 2px" class="img-fluid">
+					<h5 class="card-title d-inline align-middle">TheaterTime</h5>
+					<h6 class="card-subtitle mb-2 text-body-secondary d-inline align-middle" id="dyn_event_title">--</h6>
+					<h6 class="card-subtitle mb-2 text-body-tertiary d-inline align-middle" id="dyn_event_subtitle">--</h6>
+				</div>
+				<div class="col-auto">
+					<div data-bs-toggle="modal" data-bs-target="#loginModal" class="btn btn-info btn-sm align-middle mt-1 me-1" id="dyn_admin_login">LOGIN</div>
+				</div>
+			</div>
 		</div>
 		<div class="container p-4" style="margin-top: 20px;">
 			<div id="dyn_error_offline" class="text-center d-none alert alert-danger" role="alert">
@@ -60,6 +67,29 @@
 				<a href="https://github.com/jtsage/TheaterTime">TheaterTime</a> &copy;2023 J.T.Sage
 			</div>
 		</footer>
+
+		<div class="modal fade" id="loginModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title fs-5" id="staticBackdropLabel">Administration Login</h1>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<div class="row g-3 mt-0 align-items-center">
+							<div class="col-3">
+								<label for="password" class="col-form-label">Event Password</label>
+							</div>
+							<div class="col"><input type="text" id="password" class="form-control"></div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+						<button type="button" onclick="clientDoPassword()" class="btn btn-primary">Login</button>
+					</div>
+				</div>
+			</div>
+		</div>
 		<script src="/js/bootstrap.bundle.min.js"></script>
 	</body>
 </html>

@@ -18,6 +18,8 @@ const IDReplace = (elementID, is_danger, innerHTML) => {
 	byID(`${elementID}_class`).classList.add(cls_add)
 }
 const TaskClassSwap = (elementID, is_overdue, is_done) => {
+	if ( byID(`${elementID}`) === null ) { return }
+
 	byID(`${elementID}`).classList.remove(
 		'list-group-item-info',
 		'list-group-item-danger',
@@ -174,6 +176,25 @@ const clientAdminButton = (buttonName) => {
 	return false
 }
 
+const clientDoPassword = () => {
+	fetch('/timer_backend/hash_password', {
+		body           : JSON.stringify( { password : byID('password').value } ),
+		cache          : 'no-cache',
+		credentials    : 'same-origin',
+		headers        : { 'Content-Type' : 'application/json' },
+		method         : 'POST',
+		mode           : 'cors',
+		redirect       : 'follow',
+		referrerPolicy : 'no-referrer',
+	}).then((response) => {
+		const [timerID, _a, _b] = document.location.pathname.replace('/', '').split('/')
+
+		response.json().then((json) => {
+			document.location.href = `${document.location.origin}/${timerID}/timer/${json.hashPass}`
+		})
+		
+	})
+}
 const runActiveCount = () => {
 	for ( const thisTimer of payload_data.timers ) {
 		if ( thisTimer.is_active ) {
@@ -218,6 +239,12 @@ const updateCounters = () => {
 	}
 
 	const realStartTime = new Date(payload_data.timers[0].time_to_end)
+
+	if ( is_admin ) {
+		byID('dyn_admin_login').classList.add('d-none')
+	} else {
+		byID('dyn_admin_login').classList.remove('d-none')
+	}
 
 	byID('dyn_timer_contain').innerHTML  = timerHTML.join('')
 	byID('dyn_switch_contain').innerHTML = switchHTML.join('')
