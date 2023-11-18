@@ -177,7 +177,7 @@ const clientAdminButton = (buttonName) => {
 }
 
 const clientDoPassword = () => {
-	fetch('/timer_backend/hash_password', {
+	fetch('/api/hash_password', {
 		body           : JSON.stringify( { password : byID('password').value } ),
 		cache          : 'no-cache',
 		credentials    : 'same-origin',
@@ -266,7 +266,7 @@ const updateCounters = () => {
 const setData = async (type, idx, subIdx = -1) => {
 	const [timerID, _, secretToken] = document.location.pathname.replace('/', '').split('/')
 
-	const response = await fetch(`/timer_backend/set/${timerID}/${secretToken}`, {
+	const response = await fetch(`/api/set/${timerID}/${secretToken}`, {
 		body           : JSON.stringify( { type : type, idx : idx, subIdx : subIdx } ),
 		cache          : 'no-cache',
 		credentials    : 'same-origin',
@@ -287,7 +287,7 @@ const getData = () => {
 
 	const [timerID, _, secretToken] = document.location.pathname.replace('/', '').split('/')
 
-	fetch(`/timer_backend/read/${timerID}/${secretToken}`)
+	fetch(`/api/read/${timerID}/${secretToken}`)
 		.then( (response) => {
 			if (response.status !== 200) {
 				byID('dyn_error_not_found').classList.remove('d-none')

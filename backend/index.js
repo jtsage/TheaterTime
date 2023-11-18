@@ -14,68 +14,63 @@
 // User configurable PORT.  If you change this,
 // change it in the sample config files as well!
 const PORT           = 3000
+const ADDRESS        = '127.0.0.1' // '0.0.0.0' for all interfaces
 
-const crypto         = require('node:crypto')
+const path           = require('node:path')
 const { Level }      = require('level')
 const fastify        = require('fastify')({ logger : true })
 const db             = new Level('theaterTimeDB', { valueEncoding : 'json' })
 const { demoRecord } = require('./data_demo_record.js')
-const fetch          = require('node-fetch')
+const util_util      = require('./util_util.js')
 
-fastify.get('/timer_backend/reset_demo', async (_, reply) => {
-	db.put('00sample00', demoRecord).then(() => {
+fastify.register(require('@fastify/static'), {
+	root : path.join(__dirname, '..', 'public_html'),
+	send : {
+		cacheControl : false,
+	},
+})
+
+fastify.get('/:timerID/timer/:secretToken?', (_, reply) => {
+	reply.code(200).type('text/html').sendFile('run_timer.html', { cacheControl : false })
+})
+
+fastify.get('/api/reset_demo', async (_, reply) => {
+	db.put('00sample00', demoRecord()).then(() => {
 		reply.type('application/json').code(200)
-		return { status : 'ok', errMsg : 'demo record reset' }
+		return util_util.jsonRespond({message : 'demo record reset' })
 	})
 })
 
-fastify.get('/timer_backend/remote_ip', async (request, reply) => {
+fastify.get('/api/remote_ip', async (request, reply) => {
 	reply.type('application/json').code(200)
-	const newPass = await fetch('https://www.dinopass.com/password/simple')
-
-	return { newPass : await newPass.text(), ip : request.headers['x-real-ip'] }
+	return util_util.jsonRespond({
+		ip      : request.headers['x-real-ip'],
+		newPass : await util_util.fetchBody('https://www.dinopass.com/password/simple'),
+	})
 })
 
-fastify.post('/timer_backend/hash_password', async (request, reply) => {
-	const textPass = request.body.password
-	const hashPass = crypto.createHash('sha512').update(textPass, 'utf-8').digest('hex').slice(0, 10)
+fastify.post('/api/hash_password', async (request, reply) => {
 	reply.type('application/json').code(200)
-	return { hashPass : hashPass }
+	return util_util.jsonRespond({ hashPass : util_util.hashPassword(request.body.password) })
 })
 
-fastify.get('/timer_backend/', async (request, reply) => {
-	reply.type('application/json').code(200)
-	return { orig : JSON.stringify(request.headers), status : 'error', errMsg : 'invalid-page' }
+fastify.get('/api/', async (_, reply) => {
+	reply.type('application/json').code(403)
+	return util_util.jsonRespond({}, 'invalid-page')
 })
 
-fastify.post('/timer_backend/add', async (request, reply) => {
-	// TODO: add item
-	//const { timerID, secretToken } = request.params
-	reply.type('application/json').code(200)
-	return {
-		body        : request.body,
-		secretToken : 'blahblah2',
-		status      : 'ok',
-		timerID     : 'blahblah',
-	}
-})
-
-fastify.post('/timer_backend/set/:timerID/:secretToken', async (request, reply) => {
+fastify.post('/api/set/:timerID/:secretToken', async (request, reply) => {
 	const { timerID, secretToken } = request.params
-	const timerRecord = await db.get(timerID)
-	const typeIDX     = request.body.idx
-	const itemIDX     = request.body.subIdx
+	const timerRecord              = await db.get(timerID)
+	const typeIDX                  = request.body.idx
+	const itemIDX                  = request.body.subIdx
 
 	if ( timerRecord !== null ) {
-		const adminHash = crypto.createHash('sha512').update(timerRecord.internals.adminPass, 'utf-8').digest('hex').slice(0, 10)
+		const adminHash = util_util.hashPassword(timerRecord.internals.adminPass)
 
 		if ( secretToken !== adminHash ) {
 			reply.type('application/json').code(403)
-			return {
-				status      : 1,
-				status_msg  : 'credentials-failed',
-				timerID     : timerID,
-			}
+			return util_util.jsonRespond({ timerID : timerID }, 'invalid-credentials')
 		}
 
 		switch ( request.body.type ) {
@@ -128,48 +123,35 @@ fastify.post('/timer_backend/set/:timerID/:secretToken', async (request, reply) 
 		await db.put(timerID, timerRecord)
 
 		reply.type('application/json').code(200)
-		return {
-			status      : 0,
-			status_msg  : 'ok',
-			timerID     : timerID,
-		}
+		return util_util.jsonRespond({ timerID : timerID })
 	}
 	reply.type('application/json').code(404)
-	return {
-		status      : 1,
-		status_msg  : 'record-not-found',
-		timerID     : timerID,
-	}
+	return util_util.jsonRespond({ timerID : timerID }, 'record-not-found')
 })
 
-fastify.get('/timer_backend/read/:timerID/:secretToken?', async (request, reply) => {
+fastify.get('/api/read/:timerID/:secretToken?', async (request, reply) => {
 	const { timerID, secretToken } = request.params
-
-	const timerRecord = await db.get(timerID)
+	const timerRecord              = await db.get(timerID)
 	
 	if ( timerRecord !== null ) {
 		reply.type('application/json').code(200)
-		const adminHash = crypto.createHash('sha512').update(timerRecord.internals.adminPass, 'utf-8').digest('hex').slice(0, 10)
-		return {
+		const adminHash = util_util.hashPassword(timerRecord.internals.adminPass)
+		return util_util.jsonRespond({
 			clientData  : timerRecord.clientData,
 			isAdmin     : secretToken === adminHash,
-			status      : 0,
-			status_msg  : 'ok',
 			timerID     : timerID,
-		}
+		})
 	}
 	reply.type('application/json').code(404)
-	return {
+	return util_util.jsonRespond({
 		clientData  : null,
 		isAdmin     : false,
-		status      : 1,
-		status_msg  : 'record-not-found',
 		timerID     : timerID,
-	}
+	}, 'record-not-found')
 })
 
 
-fastify.listen({ port : PORT }, (err) => {
+fastify.listen({ port : PORT, address : ADDRESS }, (err) => {
 	if (err) {
 		fastify.log.error(err)
 		process.exit(1)

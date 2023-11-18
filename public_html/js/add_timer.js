@@ -133,7 +133,7 @@ const fillFormData = () => {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-	fetch('/timer_backend/remote_ip')
+	fetch('/api/remote_ip')
 		.then( (response) => {
 			if (response.status === 200) {
 				response.json().then((data) => {

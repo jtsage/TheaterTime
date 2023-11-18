@@ -11,7 +11,7 @@
 
 const fetch = require('node-fetch')
 
-fetch('http://localhost:3000/timer_backend/reset_demo')
+fetch('http://localhost:3000/api/reset_demo')
 	.then((res) => res.text())
 	.then(() => console.log('Demo Data Reset'))
 	.catch((err) => console.log('Connection Failed: ', err))
