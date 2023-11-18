@@ -18,9 +18,9 @@ const ADDRESS        = '127.0.0.1' // '0.0.0.0' for all interfaces
 
 const path           = require('node:path')
 const { Level }      = require('level')
-const fastify        = require('fastify')({ logger : true })
+const fastify        = require('fastify')({ ignoreTrailingSlash : true, logger : true })
 const db             = new Level('theaterTimeDB', { valueEncoding : 'json' })
-const { demoRecord } = require('./data_demo_record.js')
+const { demoRecord, blankRecord } = require('./data_event_records.js')
 const util_util      = require('./util_util.js')
 
 fastify.register(require('@fastify/static'), {
@@ -32,6 +32,11 @@ fastify.register(require('@fastify/static'), {
 
 fastify.get('/:timerID/timer/:secretToken?', (_, reply) => {
 	reply.code(200).type('text/html').sendFile('run_timer.html', { cacheControl : false })
+})
+
+fastify.get('/api/blank_record', async (_, reply) => {
+	reply.type('application/json').code(200)
+	return blankRecord()
 })
 
 fastify.get('/api/reset_demo', async (_, reply) => {
@@ -52,11 +57,6 @@ fastify.get('/api/remote_ip', async (request, reply) => {
 fastify.post('/api/hash_password', async (request, reply) => {
 	reply.type('application/json').code(200)
 	return util_util.jsonRespond({ hashPass : util_util.hashPassword(request.body.password) })
-})
-
-fastify.get('/api/', async (_, reply) => {
-	reply.type('application/json').code(403)
-	return util_util.jsonRespond({}, 'invalid-page')
 })
 
 fastify.post('/api/set/:timerID/:secretToken', async (request, reply) => {
@@ -148,6 +148,11 @@ fastify.get('/api/read/:timerID/:secretToken?', async (request, reply) => {
 		isAdmin     : false,
 		timerID     : timerID,
 	}, 'record-not-found')
+})
+
+fastify.get('/api*', async (_, reply) => {
+	reply.type('application/json').code(403)
+	return util_util.jsonRespond({}, 'invalid-request')
 })
 
 

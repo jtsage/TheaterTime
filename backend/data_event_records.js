@@ -63,7 +63,7 @@ module.exports.demoRecord = () => {
 
 					items          : [
 						{ name : 'Turn on bass wireless', time : 30, status : false },
-						{ name : 'Turn off portrait lights', time : 5, status : false },
+						{ name : 'Turn off accent lighting', time : 5, status : false },
 					],
 				},
 				{
@@ -101,6 +101,88 @@ module.exports.demoRecord = () => {
 					reset_places   : false,
 					time_to_end    : null,
 					time_was_start : null,
+				},
+			],
+		},
+	}
+}
+
+module.exports.blankRecord = () => {
+	const sample_start_time = new Date()
+	sample_start_time.setHours(19)
+	sample_start_time.setMinutes(30)
+	sample_start_time.setSeconds(0)
+	sample_start_time.setMilliseconds(0)
+
+	return  {
+		internals : {
+			adminPass : '',
+			ipAddress : '',
+		},
+		clientData : {
+			info : {
+				title    : 'Some Example Theater',
+				subtitle : 'Some Example Show',
+			},
+			switches : [
+				{
+					id         : 'house',
+					name       : 'House',
+					status     : false,
+					switch_off : 'House is NOT Open',
+					switch_on  : 'House is OPEN',
+				},
+				{
+					id         : 'mics',
+					name       : 'Microphones',
+					status     : false,
+					switch_off : 'Microphones are NOT ready',
+					switch_on  : 'Microphones are READY',
+				},
+				{
+					id         : 'places',
+					name       : 'Places',
+					status     : false,
+					switch_off : 'Places has NOT been called',
+					switch_on  : 'Places HAS been called',
+				},
+			],
+			timers : [
+				{
+					id             : 'timer_pre_show',
+					is_down        : true,
+					min_to_count   : null,
+					name           : 'Pre Show',
+					reset_places   : false,
+					time_to_end    : sample_start_time.getTime(),
+
+					items          : [
+						{ name : 'Turn off accent lighting in entry', time : 1, status : false },
+					],
+				},
+				{
+					id             : 'timer_act_1',
+					is_down        : false,
+					min_to_count   : null,
+					name           : 'Act 1',
+					reset_places   : false,
+					time_to_end    : null,
+				},
+				{
+					id             : 'timer_intermission',
+					is_down        : true,
+					min_to_count   : 15,
+					name           : 'Intermission',
+					reset_places   : true,
+					time_to_end    : null,
+				},
+				{
+					id             : 'timer_act_2',
+					is_down        : false,
+					min_to_count   : null,
+					name           : 'Act 2',
+					reset_places   : false,
+					time_to_end    : null,
 				},
 			],
 		},
