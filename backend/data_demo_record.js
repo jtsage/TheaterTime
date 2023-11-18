@@ -27,14 +27,14 @@ module.exports.demoRecord = {
 			{
 				id         : 'house',
 				name       : 'House',
-				status     : true,
+				status     : false,
 				switch_off : 'House is NOT Open',
 				switch_on  : 'House is OPEN',
 			},
 			{
 				id         : 'mics',
 				name       : 'Microphones',
-				status     : true,
+				status     : false,
 				switch_off : 'Microphones are NOT ready',
 				switch_on  : 'Microphones are READY',
 			},
