@@ -150,6 +150,40 @@ fastify.get('/api/read/:timerID/:secretToken?', async (request, reply) => {
 	}, 'record-not-found')
 })
 
+fastify.post('/api/add', async (request, reply) => {
+	reply.code(200).type('application/json')
+	const newData = request.body
+	let newID     = ''
+	let collision = true
+	while ( collision ) {
+		newID = util_util.makeNewID(8)
+		try {
+			/* eslint-disable no-await-in-loop */
+			await db.get(newID)
+			/* collision exists */
+			/* eslint-enable no-await-in-loop */
+		} catch {
+			collision = false
+		}
+	}
+
+	newData.internals.addDate = Date.now()
+
+	return util_util.jsonRespond({
+		newData   : newData,
+		timerID   : newID,
+		adminHash : util_util.hashPassword(newData.internals.adminPass),
+	})
+
+	// db.put(newID, newData).then(() => {
+	// 	reply.type('application/json').code(200)
+	// 	return util_util.jsonRespond({
+	// 		timerID   : newID,
+	// 		adminHash : util_util.hashPassword(newData.internals.adminPass),
+	// 	})
+	// })
+})
+
 fastify.get('/api*', async (_, reply) => {
 	reply.type('application/json').code(403)
 	return util_util.jsonRespond({}, 'invalid-request')

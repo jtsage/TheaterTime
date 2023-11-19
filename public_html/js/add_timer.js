@@ -8,6 +8,12 @@
 /* global bootstrap */
 
 const byID      = (elementID) => document.getElementById(elementID)
+const _zPad     = (text, places = 2) => text.toString().padStart(places, 0)
+const tzAdjust  = (epoch) => epoch + (new Date().getTimezoneOffset()*60*1000)
+const localISO  = (thisDate) => {
+	return `${thisDate.getFullYear()}-${_zPad(thisDate.getMonth()+1)}-${_zPad(thisDate.getDate())}T${_zPad(thisDate.getHours())}:${_zPad(thisDate.getMinutes())}`
+}
+
 let eventData   = {}
 
 const buildSwitch = (idx, switchData) => {
@@ -80,8 +86,8 @@ const buildTimer = (idx, timerData) => {
 				<li class="list-group-item list-group-item-light"><strong>ID</strong> : ${timerData.id}</li>
 				<li class="list-group-item list-group-item-light"><strong>Name</strong> : ${timerData.name}</li>
 				<li class="list-group-item list-group-item-light"><strong>Type</strong> : ${timerType}</li>
-				<li class="list-group-item list-group-item-light"><strong>End Time</strong> : ${timerData.is_down && timerData.time_to_end !== null ? new Date(timerData.time_to_end).toLocaleString() : '<em>n/a</em>' }</li>
-				<li class="list-group-item list-group-item-light"><strong>Minutes to Count</strong> : ${timerData.is_down && timerData.min_to_count !== null ? timerData.min_to_count : '<em>n/a</em>'}</li>
+				<li class="list-group-item list-group-item-light"><strong>End Time</strong> : ${timerData.is_down && timerData.time_to_end !== null ? new Date(timerData.time_to_end).toLocaleString() : '<em>--</em>' }</li>
+				<li class="list-group-item list-group-item-light"><strong>Minutes to Count</strong> : ${timerData.is_down && timerData.min_to_count !== null ? timerData.min_to_count : '<em>--</em>'}</li>
 				<li class="list-group-item list-group-item-light"><strong>Reset Places Switch</strong> : ${timerData.reset_places ? 'YES' : 'no'}</li>
 			</ul>
 			<div class="text-bg-info text-white p-2 text-center"><strong>Extra Items</strong></div>
@@ -90,15 +96,118 @@ const buildTimer = (idx, timerData) => {
 	</div>`
 }
 
-const clientEditTimer = (idx) => {}
-const clientDoTimerEdit = () => {}
-const clientDeleteTimer = (idx) => {}
-const clientDoTimerDelete = () => {}
-const clientMoveTimer = (idx, direction) => {}
-const clientDeleteTimerItem = (timerIDX, itemIDX) => {}
-const clientDoTimerItemDelete = () => {}
-const clientAddTimerItem = (timerIDX) => {}
-const clientDoTimerItemAdd = () => {}
+const clientEditTimer = (idx) => {
+	const timerData = idx === -1 ? null : eventData.clientData.timers[idx]
+	let timerType   = 1
+
+	if ( idx > -1 ) {
+		if ( timerData.is_down && timerData.min_to_count !== null ) {
+			timerType = 3
+		} else if ( timerData.is_down ) {
+			timerType = 2
+		}
+	}
+
+	byID('timer_idx').value            = idx
+	byID('timer_id').value             = idx === -1 ? ''    : timerData.id
+	byID('timer_name').value           = idx === -1 ? ''    : timerData.name
+	byID('timer_type').value           = timerType
+	byID('timer_minutes').value        = idx === -1 ? 0     : timerData.min_to_count ?? 0
+	byID('timer_reset_places').checked = timerData.reset_places
+
+	if ( idx > -1 && timerData.time_to_end !== null ) {
+		byID('timer_end_time').value = localISO(new Date(timerData.time_to_end))
+	} else {
+		byID('timer_end_time').value = ''
+	}
+
+	clientUpdateTimerType()
+	timerModal.show()
+}
+
+const clientUpdateTimerType = () => {
+	const timerType = parseInt(byID('timer_type').value)
+	
+	byID('timer_minutes').disabled  = ! (timerType === 3)
+	byID('timer_end_time').disabled = ! (timerType === 2)
+}
+
+const clientDoTimerEdit = () => {
+	const timerIDX  = byID('timer_idx').value
+	const timerType = parseInt(byID('timer_type').value)
+	const newData   = {
+		id           : byID('timer_id').value,
+		is_down      : timerType !== 1,
+		items        : [],
+		min_to_count : timerType === 3 ? parseInt(byID('timer_minutes').value) : null,
+		name         : byID('timer_name').value,
+		reset_places : byID('timer_reset_places').checked,
+		time_to_end  : timerType === 2 ? tzAdjust(byID('timer_end_time').valueAsNumber) : null,
+	}
+
+	if ( timerIDX > -1 ) {
+		newData.items = eventData.clientData.timers[timerIDX].items ?? []
+		eventData.clientData.timers[timerIDX] = newData
+	} else {
+		eventData.clientData.timers.push(newData)
+	}
+	timerModal.hide()
+	fillFormData()
+}
+
+const clientDeleteTimer = (idx) => {
+	byID('timer_delete_idx').value = idx
+	timerModalDelete.show()
+}
+
+const clientDoTimerDelete = () => {
+	const timerIDX = byID('timer_delete_idx').value
+	if ( timerIDX > -1 ) { eventData.clientData.timers.splice(timerIDX, 1) }
+	timerModalDelete.hide()
+	fillFormData()
+}
+
+const clientMoveTimer = (idx, direction) => {
+	const from = idx
+	const to   = direction < 0 ? idx + 1 : idx -1
+	eventData.clientData.timers.splice(to, 0, eventData.clientData.timers.splice(from, 1)[0])
+	fillFormData()
+}
+
+const clientDeleteTimerItem = (timerIDX, itemIDX) => {
+	byID('timer_delete_item_timer_idx').value = timerIDX
+	byID('timer_delete_item_item_idx').value  = itemIDX
+	itemModalDelete.show()
+}
+
+const clientDoTimerItemDelete = () => {
+	const timerIDX = byID('timer_delete_item_timer_idx').value
+	const itemIDX  = byID('timer_delete_item_item_idx').value
+	if ( timerIDX > -1 && itemIDX > -1 ) {
+		eventData.clientData.timers[timerIDX].items.splice(itemIDX, 1)
+	}
+	itemModalDelete.hide()
+	fillFormData()
+}
+
+const clientAddTimerItem = (timerIDX) => {
+	byID('timer_add_item_idx').value = timerIDX
+	itemModal.show()
+}
+
+const clientDoTimerItemAdd = () => {
+	const timerIDX = byID('timer_add_item_idx').value
+	if ( timerIDX > -1 ) {
+		eventData.clientData.timers[timerIDX].items ??= []
+		eventData.clientData.timers[timerIDX].items.push({
+			name : byID('item_name').value,
+			time : parseInt(byID('item_minutes').value),
+			status : false,
+		})
+	}
+	itemModal.hide()
+	fillFormData()
+}
 
 const clientDoText = (name) => {
 	switch ( name ) {
@@ -192,8 +301,75 @@ const fillFormData = () => {
 	byID('dyn_timers').innerHTML = timerHTML.join('')
 }
 
+const clientDoCreate = () => {
+	fetch('/api/add/', {
+		body           : JSON.stringify( eventData ),
+		cache          : 'no-cache',
+		credentials    : 'same-origin',
+		headers        : { 'Content-Type' : 'application/json' },
+		method         : 'POST',
+		mode           : 'cors',
+		redirect       : 'follow',
+		referrerPolicy : 'no-referrer',
+	}).then((response) => response.json() ).then((json) => {
+		console.log(json)
+
+		console.log(`${document.location.origin}/${json.timerID}/timer/${json.adminHash}`)
+	})
+}
+
+const clientDoExport = () => {
+	const bytes   = new TextEncoder().encode(JSON.stringify(eventData))
+	const blob    = new Blob([bytes], { type : 'application/json;charset=utf-8' })
+	const link    = document.createElement('a')
+	link.href     = window.URL.createObjectURL(blob)
+	link.download = 'theaterTimeExport.json'
+	document.body.appendChild(link)
+	link.click()
+	link.remove()
+}
+
+const clientDoImport = () => {
+	if ( byID('importFile').files.length !== 0 ) {
+		const reader = new FileReader()
+		
+		reader.addEventListener(
+			'load',
+			() => {
+				// this will then display a text file
+				try {
+					const newJSON = JSON.parse(reader.result)
+					eventData     = newJSON
+
+					fetch('/api/remote_ip')
+						.then( (response2) => {
+							if (response2.status === 200) {
+								response2.json().then((data2) => {
+									eventData.internals.ipAddress = data2.ip
+									eventData.internals.adminPass = data2.newPass
+									alert('Import Successful')
+									fillFormData()
+								})
+							}
+						}).catch( () => { /* do nothing */ })
+				} catch (err) {
+					alert(`Unable to parse JSON : ${err}`)
+				} finally {
+					byID('importFile').value = ''
+				}
+			},
+			false
+		)
+		reader.readAsText(byID('importFile').files[0])
+	}
+}
+
 let switchModal       = null
 let switchModalDelete = null
+let timerModal        = null
+let timerModalDelete  = null
+let itemModal         = null
+let itemModalDelete   = null
 
 document.addEventListener('DOMContentLoaded', () => {
 	fetch('/api/blank_record')
@@ -217,4 +393,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	switchModal       = new bootstrap.Modal('#switchModal')
 	switchModalDelete = new bootstrap.Modal('#switchDelete')
+	timerModal        = new bootstrap.Modal('#timerModal')
+	timerModalDelete  = new bootstrap.Modal('#timerDelete')
+	itemModal         = new bootstrap.Modal('#timerItemModal')
+	itemModalDelete   = new bootstrap.Modal('#timerItemDelete')
 })

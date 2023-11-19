@@ -84,6 +84,16 @@ const parseTimer = (timerData) => {
 const makeExtras = (id, extraArray, isAdmin) => {
 	if ( typeof extraArray === 'undefined' || !isAdmin ) { return '' }
 
+	let timer_index = 0
+	for ( const [timerIDX, timerData] of payload_data.timers.entries() ) {
+		if ( timerData.id === id ) {
+			timer_index = timerIDX
+			break
+		}
+	}
+
+	const showTime = payload_data.timers[timer_index].is_down && payload_data.timers[timer_index].time_to_end !== null
+
 	const returnHTML = [
 		'<div class="list-group mt-2">'
 	]
@@ -94,10 +104,10 @@ const makeExtras = (id, extraArray, isAdmin) => {
 
 		returnHTML.push(`
 			<div class="list-group-item ${taskClass} d-flex justify-content-between align-items-start" id="${id}_${idx}_class">
-			<em>${printItemTime(thisItem.time)}</em>
+			${showTime ? `<em>${printItemTime(thisItem.time)}</em>` : ''}
 			${thisItem.name}
-			<div class="form-check">
-				<input class="form-check-input" ${taskCheck} onclick="clientItemButton('${id}', ${idx})" type="checkbox" value="" id="${id}_${idx}">
+			<div class="form-check form-switch">
+				<input role="switch" class="form-check-input" ${taskCheck} onclick="clientItemButton('${id}', ${idx})" type="checkbox" value="" id="${id}_${idx}">
 			</div>
 			</div>
 		`)
@@ -195,13 +205,19 @@ const clientDoPassword = () => {
 		
 	})
 }
+
 const runActiveCount = () => {
 	for ( const thisTimer of payload_data.timers ) {
 		if ( thisTimer.is_active ) {
 			byID(thisTimer.id).innerHTML = parseTimer(thisTimer)
 
 			if ( typeof thisTimer.items !== 'undefined' ) {
-				const minLeft = Math.floor(((thisTimer.time_to_end - Date.now()) / 1000) / 60)
+				let minLeft = 1000000
+
+				if ( thisTimer.is_down && thisTimer.time_to_end !== null ) {
+					minLeft = Math.floor(((thisTimer.time_to_end - Date.now()) / 1000) / 60)
+				}
+
 				for ( const [idx, thisItem] of thisTimer.items.entries() ) {
 					TaskClassSwap(
 						`${thisTimer.id}_${idx}_class`,
