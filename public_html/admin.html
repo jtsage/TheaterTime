@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Theater Time</title>
+		<link href="css/bootstrap.min.css" rel="stylesheet">
+		<link href="css/bootstrap-icons.css" rel="stylesheet">
+		<script src="js/admin.js"></script>
+
+		<!--  ___  _               _            ___  _              -->
+		<!-- |_ _|| |_  ___  ___ _| |_ ___  _ _|_ _|<_>._ _ _  ___  -->
+		<!--  | | | . |/ ._><_> | | | / ._>| '_>| | | || ' ' |/ ._> -->
+		<!--  |_| |_|_|\___.<___| |_| \___.|_|  |_| |_||_|_|_|\___. -->
+		<!-- (c) 2023 J.T.Sage - ISC License -->
+
+		<link rel="apple-touch-icon" sizes="180x180" href="/icon/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="/icon/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/icon/favicon-16x16.png">
+		<link rel="manifest" href="/icon/site.webmanifest">
+		<link rel="mask-icon" href="/icon/safari-pinned-tab.svg" color="#5bbad5">
+		<link rel="shortcut icon" href="/icon/favicon.ico">
+		<meta name="msapplication-TileColor" content="#2d89ef">
+		<meta name="msapplication-config" content="/icon/browserconfig.xml">
+		<meta name="theme-color" content="#ffffff">
+	</head>
+	<body data-bs-theme="dark">
+		<div class="fixed-top pt-0 bg-primary-subtle" style="height: 40px" id="main-header">
+			<img src="icon/android-chrome-192x192.png" style="height: 36px; margin-top: 2px" class="img-fluid">
+			<h5 class="card-title d-inline align-middle"><a class="text-body text-decoration-none" href="/">TheaterTime</a></h5>
+			<h6 class="card-subtitle mb-2 text-body-secondary d-inline align-middle">Simple Show Timer</h6>
+			<h6 class="card-subtitle mb-2 text-body-tertiary d-inline align-middle">Admin Interface</h6>
+		</div>
+		<div class="container p-4" style="margin-top: 20px;">
+			<div class="card mt-4">
+				<div class="card-header">All Timers</div>
+				<div class="card-body">
+					<p class="text-center">This page shows all events.  Links are to the admin interface.</p>
+					<div id="dyn_error_not_found" class="text-center d-none alert alert-danger" role="alert">
+						No timers found!
+					</div>
+					<div id="dyn_error_bad_pass" class="text-center d-none alert alert-danger" role="alert">
+						Invalid password for admin page
+					</div>
+					<div id="dyn_error_bad_ip" class="text-center d-none alert alert-danger" role="alert">
+						Your IP cannot view this page
+					</div>
+					<div class="list-group list-group-flush" id="dyn_local_timers"></div>
+					<h5 class="mt-4">Data Retention Policy:</h5>
+					<p>If all timers are complete (0 incomplete), events are removed 1 week after creation.  Otherwise, events are removed 1 month after creation.</p>
+				</div>
+			</div>
+		</div>
+		<footer class="footer fixed-bottom mt-auto bg-primary-subtle small border-top" id="main-footer">
+			<div class="container-fluid text-center">
+				<a href="https://github.com/jtsage/TheaterTime">TheaterTime</a> &copy;2023 J.T.Sage
+			</div>
+		</footer>
+
+		
+		<script src="js/bootstrap.bundle.min.js"></script>
+	</body>
+</html>

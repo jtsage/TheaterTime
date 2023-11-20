@@ -1,0 +1,8 @@
+{
+	"ADDRESS"       : "127.0.0.1",
+	"PORT"          : 3000,
+	"ADMIN_PASS"    : "sample-password",
+	"ADMIN_IP_LIST" : [
+		"127.0.0.1"
+	]
+}

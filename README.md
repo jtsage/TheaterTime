@@ -36,15 +36,17 @@ Probably. It is on a production server, I plan on using it for my own production
 
 Download the source. You'll need a system with node (18+ probably), and yarn on it.
 
-Install dependencies
+1. Install dependencies with `yarn`
 
-` # yarn `
+2. Edit the `server_config.json` (sample included).  If you wish to use the admin interface be sure to add your IP, and choose a password. 
 
-Run the server
+   * The admin interface is at `http://your-server:3000/admin.html?pass=hashed-password` 
+   
+   * use `node ./backend/util_hash_password.js <password>` to generate the password.
 
-` # npm start`
+3. Run the server with `npm start`
 
-The app is now running on http://localhost:3000/ - setting a proxy connection is the preferred method, but you can edit `backend/index.js` and set the app to listen on a different (or all) interface(s), and change the port if you desire.
+The app is now running on `http://localhost:3000/` - setting a proxy connection is the preferred method, but you can edit `backend/index.js` and set the app to listen on a different (or all) interface(s), and change the port if you desire.
 
 Someday, I might make a docker instance for this, but it's been a while, and I don't really remember how to do so - if anyone wants to set that up and push a PR, I'd be happy to accept it.
 

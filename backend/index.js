@@ -11,12 +11,19 @@
 	 - sample_apache_config.txt
 */
 
-// User configurable PORT.  If you change this,
-// change it in the sample config files as well!
-const PORT           = 3000
-const ADDRESS        = '127.0.0.1' // '0.0.0.0' for all interfaces
+let serverConfig = {}
 
 const path           = require('node:path')
+
+try {
+	serverConfig = require(path.join(__dirname, '..', 'server_config.json'))
+} catch {
+	/* eslint-disable no-console */
+	console.log('ERROR: Server configuration file not found. See ../server_config.sample.json')
+	process.exit(1)
+	/* eslint-enable no-console */
+}
+
 const { Level }      = require('level')
 const fastify        = require('fastify')({ ignoreTrailingSlash : true, logger : true })
 const db             = new Level(path.join(__dirname, 'theaterTimeDB'), { valueEncoding : 'json' })
@@ -66,6 +73,48 @@ fastify.get('/api/local_ip', async (request, reply) => {
 	}
 })
 
+fastify.get('/api/list_all/:secretToken', async (request, reply) => {
+	const requestIP       = request.headers['x-real-ip']
+	const { secretToken } = request.params
+
+	if ( ! serverConfig.ADMIN_IP_LIST.includes(requestIP)) {
+		reply.type('application/json').code(403)
+		return util_util.jsonRespond({ your_ip : requestIP }, 'admin-ip-invalid')
+	}
+
+	if ( util_util.hashPassword(serverConfig.ADMIN_PASS) !== secretToken) {
+		reply.type('application/json').code(403)
+		return util_util.jsonRespond({ your_ip : requestIP }, 'admin-password-invalid')
+	}
+
+	const recordList = []
+	try {
+		for await (const [key, value] of db.iterator()) {
+			recordList.push({
+				addTime    : value.internals.addDate,
+				adminHash  : util_util.hashPassword(value.internals.adminPass),
+				expStatus  : util_util.getExpiration(value.internals.addDate),
+				ip         : value.internals.ipAddress,
+				name       : value.clientData.info.title,
+				startTime  : value.clientData.timers[0].time_to_end,
+				subtitle   : value.clientData.info.subtitle,
+				timerID    : key,
+				timersRem  : value.clientData.timers.map((x) => x.is_done).filter((x) => !x).length,
+			})
+		}
+
+		const sortedList = recordList
+			.sort((a, b) => a.startTime < b.startTime ? -1 : ( a.startTime > b.startTime ? 1 : 0))
+			.sort((a, b) => a.timersRem > b.timersRem ? -1 : ( a.timersRem < b.timersRem ? 1 : 0))
+
+		reply.type('application/json').code(200)
+		return util_util.jsonRespond({ your_ip : requestIP, recordList : sortedList })
+	} catch (err) {
+		reply.type('application/json').code(500)
+		return util_util.jsonRespond({ your_ip : requestIP, errorMessage : err }, 'unknown-error')
+	}
+})
+
 fastify.get('/api/clean_up', async (_, reply) => {
 	const recordList = []
 	try {
@@ -86,7 +135,7 @@ fastify.get('/api/clean_up', async (_, reply) => {
 				return util_util.jsonRespond({ errorMessage : err, recordList : recordList }, 'batch-cleanup-failed')
 			})
 		}
-		reply.type('application/json').code(400)
+		reply.type('application/json').code(304)
 		return util_util.jsonRespond({ recordList : recordList }, 'no-stale-records')
 	} catch (err) {
 		reply.type('application/json').code(500)
@@ -288,7 +337,7 @@ fastify.get('/api*', async (_, reply) => {
 	return util_util.jsonRespond({}, 'invalid-request')
 })
 
-fastify.listen({ port : PORT, address : ADDRESS }, (err) => {
+fastify.listen({ port : serverConfig.PORT, address : serverConfig.ADDRESS }, (err) => {
 	if (err) {
 		fastify.log.error(err)
 		process.exit(1)
