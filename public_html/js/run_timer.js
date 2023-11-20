@@ -4,10 +4,12 @@
     |_| |_|_|\___.<___| |_| \___.|_|  |_| |_||_|_|_|\___.
 	(c) 2023 J.T.Sage - ISC License
 */
-/* global QRious */
+/* global QRious, bootstrap */
 let payload_data = null
 let isADMIN      = false
 let autoRefresh  = null
+
+const [_d_, pageTimerID, pageSecretToken] = document.location.pathname.replace('/', '').split('/')
 
 const byID      = (elementID) => document.getElementById(elementID)
 const IDReplace = (elementID, is_danger, innerHTML) => {
@@ -197,10 +199,8 @@ const clientDoPassword = () => {
 		redirect       : 'follow',
 		referrerPolicy : 'no-referrer',
 	}).then((response) => {
-		const [timerID, _a, _b] = document.location.pathname.replace('/', '').split('/')
-
 		response.json().then((json) => {
-			document.location.href = `${document.location.origin}/${timerID}/timer/${json.hashPass}`
+			document.location.href = `${document.location.origin}/timer/${pageTimerID}/${json.hashPass}`
 		})
 		
 	})
@@ -258,8 +258,12 @@ const updateCounters = () => {
 
 	if ( is_admin ) {
 		byID('dyn_admin_login').classList.add('d-none')
+		byID('dyn_admin_export').classList.remove('d-none')
+		byID('dyn_admin_delete').classList.remove('d-none')
 	} else {
 		byID('dyn_admin_login').classList.remove('d-none')
+		byID('dyn_admin_export').classList.add('d-none')
+		byID('dyn_admin_delete').classList.add('d-none')
 	}
 
 	byID('dyn_timer_contain').innerHTML  = timerHTML.join('')
@@ -280,9 +284,7 @@ const updateCounters = () => {
 }
 
 const setData = async (type, idx, subIdx = -1) => {
-	const [timerID, _, secretToken] = document.location.pathname.replace('/', '').split('/')
-
-	const response = await fetch(`/api/set/${timerID}/${secretToken}`, {
+	const response = await fetch(`/api/set/${pageTimerID}/${pageSecretToken}`, {
 		body           : JSON.stringify( { type : type, idx : idx, subIdx : subIdx } ),
 		cache          : 'no-cache',
 		credentials    : 'same-origin',
@@ -301,9 +303,7 @@ const getData = () => {
 		autoRefresh = null
 	}
 
-	const [timerID, _, secretToken] = document.location.pathname.replace('/', '').split('/')
-
-	fetch(`/api/read/${timerID}/${secretToken}`)
+	fetch(`/api/read/${pageTimerID}/${pageSecretToken}`)
 		.then( (response) => {
 			if (response.status !== 200) {
 				byID('dyn_error_not_found').classList.remove('d-none')
@@ -327,6 +327,50 @@ const getData = () => {
 		})
 }
 
+const clientAskDelete = () => {	if ( isADMIN ) { deleteModal.show() } }
+
+const clientDoDelete = () => {
+	if ( !isADMIN ) { return }
+	fetch(`/api/delete/${pageTimerID}/${pageSecretToken}`, {
+		body           : JSON.stringify({}),
+		cache          : 'no-cache',
+		credentials    : 'same-origin',
+		headers        : { 'Content-Type' : 'application/json' },
+		method         : 'POST',
+		mode           : 'cors',
+		redirect       : 'follow',
+		referrerPolicy : 'no-referrer',
+	}).then((response) => {
+		if ( response.status === 200 ) {
+			document.location.href = document.location.origin
+		} else {
+			alert('Delete Failed!')
+		}
+	}).catch((err) => {
+		alert(`Delete Failed : ${err}`)
+	})
+}
+
+const clientDoExport = () => {
+	const exportData = {
+		internals : {
+			adminPass : 'exported-data-redacted',
+			ipAddress : '',
+		},
+		clientData : payload_data,
+	}
+	const bytes   = new TextEncoder().encode(JSON.stringify(exportData))
+	const blob    = new Blob([bytes], { type : 'application/json;charset=utf-8' })
+	const link    = document.createElement('a')
+	link.href     = window.URL.createObjectURL(blob)
+	link.download = 'theaterTimeExport.json'
+	document.body.appendChild(link)
+	link.click()
+	link.remove()
+}
+
+let deleteModal = null
+
 document.addEventListener('DOMContentLoaded', () => {
 	const queryString = new URLSearchParams(document.location.search)
 	
@@ -335,9 +379,11 @@ document.addEventListener('DOMContentLoaded', () => {
 	} else {
 		new QRious({
 			element : byID('dyn_qr_code'),
-			value   : `${window.location.href}?mobile=true`,
+			value   : `${window.location.origin}/timer/${pageTimerID}/?mobile=true`,
 		})
 	}
+
+	deleteModal = new bootstrap.Modal('#deleteModal')
 
 	getData()
 })

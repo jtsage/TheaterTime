@@ -7,6 +7,12 @@
 		<link href="css/bootstrap.min.css" rel="stylesheet">
 		<link href="css/bootstrap-icons.css" rel="stylesheet">
 
+		<!--  ___  _               _            ___  _              -->
+		<!-- |_ _|| |_  ___  ___ _| |_ ___  _ _|_ _|<_>._ _ _  ___  -->
+		<!--  | | | . |/ ._><_> | | | / ._>| '_>| | | || ' ' |/ ._> -->
+		<!--  |_| |_|_|\___.<___| |_| \___.|_|  |_| |_||_|_|_|\___. -->
+		<!-- (c) 2023 J.T.Sage - ISC License -->
+
 		<link rel="apple-touch-icon" sizes="180x180" href="/icon/apple-touch-icon.png">
 		<link rel="icon" type="image/png" sizes="32x32" href="/icon/favicon-32x32.png">
 		<link rel="icon" type="image/png" sizes="16x16" href="/icon/favicon-16x16.png">
@@ -26,10 +32,26 @@
 		<div class="container p-4" style="margin-top: 20px;">
 			<div class="row">
 				<div class="col-md-6 mt-3">
-					<a href="nope.html" class="py-5 rounded-3 btn btn-success w-100"><i class="bi bi-search"></i> Find Local Timer <i class="bi bi-search"></i></a>
+					<a href="find_local.html" class="py-5 rounded-3 btn btn-success w-100"><i class="bi bi-search"></i> Find Local Timer <i class="bi bi-search"></i></a>
 				</div>
 				<div class="col-md-6 mt-3">
-					<a href="nope.html" class="py-5 rounded-3 btn btn-warning w-100"><i class="bi bi-plus-circle"></i> Add New Timer <i class="bi bi-plus-circle"></i></a>
+					<a href="add_timer.html" class="py-5 rounded-3 btn btn-warning w-100"><i class="bi bi-plus-circle"></i> Add New Timer <i class="bi bi-plus-circle"></i></a>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-12 mt-5">
+					<div class="card text-bg-secondary">
+						<div class="card-body">
+							<h5 class="card-title text-center">FAQ</h5>
+							<dl><dt>Is this secure?</dt><dd>Probably not, no.  Please do not add any sensitive data</dd></dl>
+							<dl><dt>Can I retrieve a lost password?</dt><dd>Nope. Create a new timer. And remember to export the data from it for reuse too.</dd></dl>
+							<dl><dt>Where did my event go?</dt><dd>Events with no unfinished timers are purged 1 week after creation. All other events are purged one month after creation.</dd></dl>
+							<dl><dt>Can you add XXX?</dt><dd>Maybe.  Head over to the <a href="https://github.com/jtsage/TheaterTime">GitHub</a> and open an issue and I'll take a look.</dd></dl>
+							<dl><dt>Can I privately host this?</dt><dd>Sure.  It should also work fine on closed networks.  Grab the source from GitHub, there are docs there too</dd></dl>
+							<dl><dt>Does this cost anything?</dt><dd>Nope. The source is open too, see the GitHub</dd></dl>
+						</div>
+					</div>
 				</div>
 			</div>
 
@@ -38,14 +60,15 @@
 					<div class="card text-bg-primary">
 						<div class="card-body text-center">
 							<h5 class="card-title">Demo Links</h5>
+							Note: deleting the demo record will reset it to initial new event state
 						</div>
 					</div>
 				</div>
 				<div class="col-md-6 mt-3">
-					<a href="/00sample00/timer/9991663a04" class="py-5 rounded-3 btn btn-info w-100"><i class="bi bi-unlock"></i> ADMIN interface <i class="bi bi-unlock"></i></a>
+					<a href="/timer/00sample00/9991663a04" class="py-5 rounded-3 btn btn-info w-100"><i class="bi bi-unlock"></i> ADMIN interface <i class="bi bi-unlock"></i></a>
 				</div>
 				<div class="col-md-6 mt-3">
-					<a href="/00sample00/timer/" class="py-5 rounded-3 btn btn-info w-100"><i class="bi bi-lock"></i> REGULAR interface <i class="bi bi-lock"></i></a>
+					<a href="/timer/00sample00/" class="py-5 rounded-3 btn btn-info w-100"><i class="bi bi-lock"></i> REGULAR interface <i class="bi bi-lock"></i></a>
 				</div>
 			</div>
 		</div>

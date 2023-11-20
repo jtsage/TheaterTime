@@ -4,7 +4,10 @@
   "description": "Theater Timer",
   "main": "backend/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start" : "node backend/index.js",
+    "reset-demo" : "node backend/util_reset_demo_data.js",
+    "daily-maint" : "node backend/util_run_daily_clean.js"
   },
   "author": "J.T.Sage",
   "license": "ISC",

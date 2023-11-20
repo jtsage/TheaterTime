@@ -19,7 +19,7 @@ const ADDRESS        = '127.0.0.1' // '0.0.0.0' for all interfaces
 const path           = require('node:path')
 const { Level }      = require('level')
 const fastify        = require('fastify')({ ignoreTrailingSlash : true, logger : true })
-const db             = new Level('theaterTimeDB', { valueEncoding : 'json' })
+const db             = new Level(path.join(__dirname, 'theaterTimeDB'), { valueEncoding : 'json' })
 const { demoRecord, blankRecord } = require('./data_event_records.js')
 const util_util      = require('./util_util.js')
 
@@ -30,8 +30,71 @@ fastify.register(require('@fastify/static'), {
 	},
 })
 
-fastify.get('/:timerID/timer/:secretToken?', (_, reply) => {
+fastify.setNotFoundHandler((_, reply) => {
+	reply.code(200).type('text/html').sendFile('nope.html')
+})
+
+fastify.get('/timer/:timerID/:secretToken?', (_, reply) => {
 	reply.code(200).type('text/html').sendFile('run_timer.html', { cacheControl : false })
+})
+
+fastify.get('/api/local_ip', async (request, reply) => {
+	const searchIP   = request.headers['x-real-ip']
+	const recordList = []
+	try {
+		for await (const [key, value] of db.iterator()) {
+			if ( searchIP === value.internals.ipAddress ) {
+				recordList.push({
+					addTime    : value.internals.addDate,
+					expStatus  : util_util.getExpiration(value.internals.addDate),
+					ip         : value.internals.ipAddress,
+					name       : value.clientData.info.title,
+					startTime  : value.clientData.timers[0].time_to_end,
+					subtitle   : value.clientData.info.subtitle,
+					timerID    : key,
+					timersRem  : value.clientData.timers.map((x) => x.is_done).filter((x) => !x).length,
+				})
+			}
+		}
+
+		const sortedList = recordList
+			.sort((a, b) => a.startTime < b.startTime ? -1 : ( a.startTime > b.startTime ? 1 : 0))
+			.sort((a, b) => a.timersRem > b.timersRem ? -1 : ( a.timersRem < b.timersRem ? 1 : 0))
+
+		reply.type('application/json').code(200)
+		return util_util.jsonRespond({ your_ip : searchIP, recordList : sortedList })
+	} catch (err) {
+		reply.type('application/json').code(500)
+		return util_util.jsonRespond({ your_ip : searchIP, errorMessage : err }, 'unknown-error')
+	}
+})
+
+fastify.get('/api/clean_up', async (_, reply) => {
+	const recordList = []
+	try {
+		for await (const [key, value] of db.iterator()) {
+			const timersRemain = value.clientData.timers.map((x) => x.is_done).filter((x) => !x).length
+			const expStatus    = util_util.getExpiration(value.internals.addDate)
+
+			if ( expStatus.week && timersRemain === 0 || expStatus.month ) {
+				recordList.push({ type : 'del', key : key })
+			}
+		}
+		if ( recordList.length !== 0 ) {
+			return db.batch(recordList).then(() => {
+				reply.type('application/json').code(200)
+				return util_util.jsonRespond({ recordList : recordList })
+			}).catch((err) => {
+				reply.type('application/json').code(500)
+				return util_util.jsonRespond({ errorMessage : err, recordList : recordList }, 'batch-cleanup-failed')
+			})
+		}
+		reply.type('application/json').code(400)
+		return util_util.jsonRespond({ recordList : recordList }, 'no-stale-records')
+	} catch (err) {
+		reply.type('application/json').code(500)
+		return util_util.jsonRespond({ errorMessage : err }, 'unknown-error')
+	}
 })
 
 fastify.get('/api/blank_record', async (_, reply) => {
@@ -129,6 +192,37 @@ fastify.post('/api/set/:timerID/:secretToken', async (request, reply) => {
 	return util_util.jsonRespond({ timerID : timerID }, 'record-not-found')
 })
 
+fastify.post('/api/delete/:timerID/:secretToken', async (request, reply) => {
+	const { timerID, secretToken } = request.params
+	const timerRecord              = await db.get(timerID)
+
+	if ( timerRecord === null ) {
+		reply.type('application/json').code(403)
+		return util_util.jsonRespond({ timerID : timerID }, 'invalid-record')
+	}
+
+	const adminHash = util_util.hashPassword(timerRecord.internals.adminPass)
+
+	if ( secretToken !== adminHash ) {
+		reply.type('application/json').code(403)
+		return util_util.jsonRespond({ timerID : timerID }, 'invalid-credentials')
+	}
+
+	return db.del(timerID).then(() => {
+		if ( timerID === '00sample00' ) {
+			return db.put('00sample00', demoRecord()).then(() => {
+				reply.type('application/json').code(200)
+				return util_util.jsonRespond({message : 'demo record reset' })
+			})
+		}
+		reply.type('application/json').code(200)
+		return util_util.jsonRespond({ timerID : timerID })
+	}).catch(() => {
+		reply.type('application/json').code(500)
+		return util_util.jsonRespond({ timerID : timerID }, 'delete-failed')
+	})
+})
+
 fastify.get('/api/read/:timerID/:secretToken?', async (request, reply) => {
 	const { timerID, secretToken } = request.params
 	const timerRecord              = await db.get(timerID)
@@ -151,16 +245,21 @@ fastify.get('/api/read/:timerID/:secretToken?', async (request, reply) => {
 })
 
 fastify.post('/api/add', async (request, reply) => {
-	reply.code(200).type('application/json')
-	const newData = request.body
+	const newData = util_util.prepEventRecord(request.body)
+
+	if ( newData === false ) {
+		reply.type('application/json').code(400)
+		return util_util.jsonRespond({}, 'create-timer-failed-invalid-data')
+	}
+
 	let newID     = ''
 	let collision = true
 	while ( collision ) {
-		newID = util_util.makeNewID(8)
+		newID = util_util.makeNewID(10)
 		try {
 			/* eslint-disable no-await-in-loop */
 			await db.get(newID)
-			/* collision exists */
+			/* if no error, collision exists, try again */
 			/* eslint-enable no-await-in-loop */
 		} catch {
 			collision = false
@@ -169,26 +268,28 @@ fastify.post('/api/add', async (request, reply) => {
 
 	newData.internals.addDate = Date.now()
 
-	return util_util.jsonRespond({
-		newData   : newData,
-		timerID   : newID,
-		adminHash : util_util.hashPassword(newData.internals.adminPass),
+	return db.put(newID, newData).then(() => {
+		reply.type('application/json').code(200)
+		return util_util.jsonRespond({
+			addedRecord : newData,
+			adminHash   : util_util.hashPassword(newData.internals.adminPass),
+			timerID     : newID,
+		})
+	}).catch((err) => {
+		reply.code(500).type('application/json')
+		return util_util.jsonRespond({
+			addedRecord  : newData,
+			adminHash    : util_util.hashPassword(newData.internals.adminPass),
+			errorMessage : err,
+			timerID      : newID,
+		}, 'create-timer-failed')
 	})
-
-	// db.put(newID, newData).then(() => {
-	// 	reply.type('application/json').code(200)
-	// 	return util_util.jsonRespond({
-	// 		timerID   : newID,
-	// 		adminHash : util_util.hashPassword(newData.internals.adminPass),
-	// 	})
-	// })
 })
 
 fastify.get('/api*', async (_, reply) => {
 	reply.type('application/json').code(403)
 	return util_util.jsonRespond({}, 'invalid-request')
 })
-
 
 fastify.listen({ port : PORT, address : ADDRESS }, (err) => {
 	if (err) {

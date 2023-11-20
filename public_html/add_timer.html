@@ -8,6 +8,12 @@
 		<link href="css/bootstrap-icons.css" rel="stylesheet">
 		<script src="js/add_timer.js"></script>
 
+		<!--  ___  _               _            ___  _              -->
+		<!-- |_ _|| |_  ___  ___ _| |_ ___  _ _|_ _|<_>._ _ _  ___  -->
+		<!--  | | | . |/ ._><_> | | | / ._>| '_>| | | || ' ' |/ ._> -->
+		<!--  |_| |_|_|\___.<___| |_| \___.|_|  |_| |_||_|_|_|\___. -->
+		<!-- (c) 2023 J.T.Sage - ISC License -->
+
 		<link rel="apple-touch-icon" sizes="180x180" href="/icon/apple-touch-icon.png">
 		<link rel="icon" type="image/png" sizes="32x32" href="/icon/favicon-32x32.png">
 		<link rel="icon" type="image/png" sizes="16x16" href="/icon/favicon-16x16.png">
@@ -47,13 +53,23 @@
 						<div class="col-3">
 							<label for="internal_password" class="col-form-label">Event Admin Password</label>
 						</div>
-						<div class="col"><input onchange="clientDoText('internal_password')" type="text" id="internal_password" class="form-control"></div>
+						<div class="col">
+							<input onchange="clientDoText('internal_password')" type="text" id="internal_password" class="form-control">
+							<div class="form-text">
+								Password is stored in plaintext, please don't use sensitive data. Also note there is no functionality for a lost password.
+							</div>
+						</div>
 					</div>
 					<div class="row g-3 mt-0 align-items-center">
 						<div class="col-3">
 							<label for="internal_ip" class="col-form-label">Event Local IP</label>
 						</div>
-						<div class="col"><input type="text" id="internal_ip" readonly class="bg-body-secondary form-control text-body-tertiary"></div>
+						<div class="col">
+							<input type="text" id="internal_ip" readonly class="bg-body-secondary form-control text-body-tertiary">
+							<div class="form-text">
+								Used for "find local timers" button on home page.  This should be your public IP, likely shared by all of the devices in your building
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -61,7 +77,7 @@
 			<div class="card mt-4">
 				<div class="card-header">General Information Switches
 					<div class="float-end">
-						<div class="btn btn-sm btn-info" title="Add" onclick="clientEditSwitch(-1)"><i class="bi bi-plus-circle"></i></div>
+						<div class="btn btn-sm btn-info" title="Add Switch" onclick="clientEditSwitch(-1)"><i class="bi bi-plus-circle"></i></div>
 					</div>
 				</div>
 				<div class="card-body">
@@ -72,7 +88,11 @@
 			</div>
 
 			<div class="card mt-4">
-				<div class="card-header">Timer Parts</div>
+				<div class="card-header">Timer Parts
+					<div class="float-end">
+						<div class="btn btn-sm btn-info" title="Add Timer" onclick="clientEditTimer(-1)"><i class="bi bi-plus-circle"></i></div>
+					</div>
+				</div>
 				<div class="card-body">
 					<p class="text-center">Timers show on all displays as a countdown or a count up.  They can have additional todo items on the logged in admin screens.  Only logged in admins can interact with timers.</p>
 					<div class="row row-cols-1 row-cols-md-3 g-3" id="dyn_timers"></div>
@@ -99,9 +119,9 @@
 
 						<div class="col">
 							<div class="card">
-								<div class="card-header text-center">Create</div>
+								<div class="card-header text-center">Verify & Create</div>
 								<div class="card-body">
-									<div class="btn btn-success w-75 d-block mx-auto" onclick="clientDoCreate()"><i class="bi bi-calendar2-check"></i> Create as New Event <i class="bi bi-calendar2-check"></i></div>
+									<div class="btn btn-success w-75 d-block mx-auto" onclick="clientCheckEvent()"><i class="bi bi-calendar2-check"></i> Create as New Event <i class="bi bi-calendar2-check"></i></div>
 								</div>
 							</div>
 						</div>
@@ -325,6 +345,64 @@
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 						<button type="button" onclick="clientDoTimerItemAdd()" class="btn btn-primary">Add</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="checkModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title fs-5" id="staticBackdropLabel">Event Sanity Check</h1>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<ul class="list-group list-group-flush">
+						<li class="list-group-item list-group-item-light">
+							<i id="check_pass_ok" class="bi bi-check-lg text-success"></i>
+							<i id="check_pass_no" class="bi bi-exclamation-octagon text-danger"></i>
+							Admin Password must not be empty
+						</li>
+						<li class="list-group-item list-group-item-light text-center">
+							<strong>SWITCHES</strong>
+						</li>
+						<li class="list-group-item list-group-item-light">
+							<i id="check_count_switch_ok" class="bi bi-check-lg text-success"></i>
+							<i id="check_count_switch_no" class="bi bi-exclamation-octagon text-danger"></i>
+							One or more switches must be configured
+						</li>
+						<li class="list-group-item list-group-item-light">
+							<i id="check_id_switch_ok" class="bi bi-check-lg text-success"></i>
+							<i id="check_id_switch_no" class="bi bi-exclamation-octagon text-danger"></i>
+							Switches must have unique <code>ID</code>s
+						</li>
+						<li class="list-group-item list-group-item-light">
+							<i id="check_switch_places_ok" class="bi bi-check-lg text-success"></i>
+							<i id="check_switch_places_no" class="bi bi-exclamation-octagon text-danger"></i>
+							The <code>places</code> switch must exist
+						</li>
+						<li class="list-group-item list-group-item-light text-center">
+							<strong>TIMERS</strong>
+						</li>
+						<li class="list-group-item list-group-item-light">
+							<i id="check_count_timer_ok" class="bi bi-check-lg text-success"></i>
+							<i id="check_count_timer_no" class="bi bi-exclamation-octagon text-danger"></i>
+							One or more times must be configured
+						</li>
+						<li class="list-group-item list-group-item-light">
+							<i id="check_id_timer_ok" class="bi bi-check-lg text-success"></i>
+							<i id="check_id_timer_no" class="bi bi-exclamation-octagon text-danger"></i>
+							Timers must have unique <code>ID</code>s
+						</li>
+						<li class="list-group-item list-group-item-light">
+							<i id="check_first_timer_ok" class="bi bi-check-lg text-success"></i>
+							<i id="check_first_timer_no" class="bi bi-exclamation-octagon text-danger"></i>
+							The first timer must be of type "Countdown to time"
+						</li>
+					</ul>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+						<button type="button" id="check_create_button" onclick="clientDoCreate()" disabled class="btn btn-success">Great, Create It!</button>
 					</div>
 				</div>
 			</div>

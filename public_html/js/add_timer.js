@@ -4,14 +4,24 @@
     |_| |_|_|\___.<___| |_| \___.|_|  |_| |_||_|_|_|\___.
 	(c) 2023 J.T.Sage - ISC License
 */
-/* eslint-disable unicorn/no-unused-properties */
 /* global bootstrap */
+
+const sanity    = (elementName, is_ok) => {
+	byID(`check_${elementName}_ok`).classList[ is_ok ? 'remove' : 'add']('d-none')
+	byID(`check_${elementName}_no`).classList[!is_ok ? 'remove' : 'add']('d-none')
+	return is_ok ? 0 : 1
+}
 
 const byID      = (elementID) => document.getElementById(elementID)
 const _zPad     = (text, places = 2) => text.toString().padStart(places, 0)
 const tzAdjust  = (epoch) => epoch + (new Date().getTimezoneOffset()*60*1000)
 const localISO  = (thisDate) => {
 	return `${thisDate.getFullYear()}-${_zPad(thisDate.getMonth()+1)}-${_zPad(thisDate.getDate())}T${_zPad(thisDate.getHours())}:${_zPad(thisDate.getMinutes())}`
+}
+const printItemTime = (minutes) => {
+	const hours = Math.floor(minutes / 60)
+	const mins  = minutes - (hours * 60)
+	return `-${hours.toString().padStart(2, 0)}:${mins.toString().padStart(2, 0)}:00`
 }
 
 let eventData   = {}
@@ -55,19 +65,21 @@ const buildTimer = (idx, timerData) => {
 	if ( typeof timerData.items === 'object' ) {
 		for ( const [itemIDX, itemData] of timerData.items.entries() ) {
 			extraItemsHTML.push(`<li class="list-group-item list-group-item-light"><div class="row">
-				<div class="col-9">
-					<strong>Time</strong> : ${itemData.time}<br />
-					<strong>Text</strong> : ${itemData.name}
+				<div class="col-10">
+					<div class="row g-0">
+						<div class="col-3"><strong>Time</strong></div><div class="col-9">${printItemTime(itemData.time)}</div>
+						<div class="col-3"><strong>Text</strong></div><div class="col-9">${itemData.name}</div>
+					</div>
 				</div>
-				<div class="col-3 text-center">
+				<div class="col-2 text-center align-self-center">
 					<div class="btn btn-sm btn-danger" title="Delete" onclick="clientDeleteTimerItem(${idx}, ${itemIDX})"><i class="bi bi-trash3"></i></div>
 				</div>
 			</li>`)
 		}
 	}
 	extraItemsHTML.push(`<li class="list-group-item list-group-item-light"><div class="row">
-		<div class="col-9"></div>
-		<div class="col-3 text-center">
+		<div class="col-10"></div>
+		<div class="col-2 align-self-center text-center">
 			<div class="btn btn-sm btn-success" title="Add New" onclick="clientAddTimerItem(${idx})"><i class="bi bi-plus-circle"></i></div>
 		</div>
 	</li></ul>`)
@@ -113,7 +125,7 @@ const clientEditTimer = (idx) => {
 	byID('timer_name').value           = idx === -1 ? ''    : timerData.name
 	byID('timer_type').value           = timerType
 	byID('timer_minutes').value        = idx === -1 ? 0     : timerData.min_to_count ?? 0
-	byID('timer_reset_places').checked = timerData.reset_places
+	byID('timer_reset_places').checked = idx === -1 ? false : timerData.reset_places
 
 	if ( idx > -1 && timerData.time_to_end !== null ) {
 		byID('timer_end_time').value = localISO(new Date(timerData.time_to_end))
@@ -135,8 +147,19 @@ const clientUpdateTimerType = () => {
 const clientDoTimerEdit = () => {
 	const timerIDX  = byID('timer_idx').value
 	const timerType = parseInt(byID('timer_type').value)
+
+	let proposedID = byID('timer_id').value
+
+	if ( timerIDX < 0 ) {
+		for ( const switchData of eventData.clientData.switches ) {
+			if (switchData.id === proposedID) {
+				proposedID = `${proposedID}_${eventData.clientData.switches.length}`
+			}
+		}
+	}
+
 	const newData   = {
-		id           : byID('timer_id').value,
+		id           : proposedID,
 		is_down      : timerType !== 1,
 		items        : [],
 		min_to_count : timerType === 3 ? parseInt(byID('timer_minutes').value) : null,
@@ -301,6 +324,26 @@ const fillFormData = () => {
 	byID('dyn_timers').innerHTML = timerHTML.join('')
 }
 
+const clientCheckEvent = () => {
+	let problem_count = 0
+	problem_count += sanity('pass', eventData?.internals?.adminPass !== '')
+
+	const test_switch = sanity('count_switch', eventData?.clientData?.switches?.length !== 0)
+	const switchIDs   = test_switch === 0 ? eventData.clientData.switches.map((x) => x.id) : []
+	problem_count += test_switch
+	problem_count += sanity('id_switch', test_switch === 0 && switchIDs.length === new Set(switchIDs).size )
+	problem_count += sanity('switch_places', test_switch === 0 && switchIDs.includes('places') )
+
+	const test_timer  = sanity('count_timer', eventData?.clientData?.timers?.length !== 0)
+	const timerIDs    = test_timer === 0 ? eventData.clientData.timers.map((x) => x.id) : []
+	problem_count += test_timer
+	problem_count += sanity('id_timer', test_timer === 0 && timerIDs.length === new Set(timerIDs).size )
+	problem_count += sanity('first_timer', test_timer === 0 && eventData.clientData.timers[0].is_down && eventData.clientData.timers[0].time_to_end !== null )
+	
+	byID('check_create_button').disabled = problem_count
+	checkModal.show()
+}
+
 const clientDoCreate = () => {
 	fetch('/api/add/', {
 		body           : JSON.stringify( eventData ),
@@ -311,10 +354,15 @@ const clientDoCreate = () => {
 		mode           : 'cors',
 		redirect       : 'follow',
 		referrerPolicy : 'no-referrer',
-	}).then((response) => response.json() ).then((json) => {
-		console.log(json)
-
-		console.log(`${document.location.origin}/${json.timerID}/timer/${json.adminHash}`)
+	}).then((response) => response.json()).then((json) => {
+		if ( json.status === 0 ) {
+			document.location.href = `${document.location.origin}/timer/${json.timerID}/${json.adminHash}`
+		} else {
+			/* eslint-disable no-console */
+			console.log(json)
+			/* eslint-enable no-console */
+			alert(`Operation failed: ${json.statusMsg}`)
+		}
 	})
 }
 
@@ -346,7 +394,6 @@ const clientDoImport = () => {
 							if (response2.status === 200) {
 								response2.json().then((data2) => {
 									eventData.internals.ipAddress = data2.ip
-									eventData.internals.adminPass = data2.newPass
 									alert('Import Successful')
 									fillFormData()
 								})
@@ -370,6 +417,7 @@ let timerModal        = null
 let timerModalDelete  = null
 let itemModal         = null
 let itemModalDelete   = null
+let checkModal        = null
 
 document.addEventListener('DOMContentLoaded', () => {
 	fetch('/api/blank_record')
@@ -397,4 +445,5 @@ document.addEventListener('DOMContentLoaded', () => {
 	timerModalDelete  = new bootstrap.Modal('#timerDelete')
 	itemModal         = new bootstrap.Modal('#timerItemModal')
 	itemModalDelete   = new bootstrap.Modal('#timerItemDelete')
+	checkModal        = new bootstrap.Modal('#checkModal')
 })

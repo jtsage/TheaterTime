@@ -94,7 +94,7 @@ module.exports = {
 		'require-atomic-updates'          : 'error',
 		'semi'                            : ['error', 'never'],
 
-		'complexity'                      : ['warn', 16],
+		'complexity'                      : ['warn', 20],
 		'sort-keys'                       : ['warn', 'asc', {'allowLineSeparatedGroups' : true, 'caseSensitive' : false, 'minKeys' : 4, 'natural' : true}],
 
 		'unicorn/better-regex'                     : 'error',
