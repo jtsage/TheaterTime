@@ -25,9 +25,6 @@ const util_util      = require('./util_util.js')
 
 fastify.register(require('@fastify/static'), {
 	root : path.join(__dirname, '..', 'public_html'),
-	send : {
-		cacheControl : false,
-	},
 })
 
 fastify.setNotFoundHandler((_, reply) => {
