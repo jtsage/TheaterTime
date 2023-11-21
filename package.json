@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start" : "node backend/index.js",
-    "start-forever" : "forever start -l timer-server.log backend/index.js",
+    "start-pm2" : "pm2 start backend/index.js --attach",
     "reset-demo" : "node backend/util_reset_demo_data.js",
     "daily-maint" : "node backend/util_run_daily_clean.js"
   },
