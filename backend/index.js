@@ -135,7 +135,7 @@ fastify.get('/api/clean_up', async (_, reply) => {
 				return util_util.jsonRespond({ errorMessage : err, recordList : recordList }, 'batch-cleanup-failed')
 			})
 		}
-		reply.type('application/json').code(304)
+		reply.type('application/json').code(200)
 		return util_util.jsonRespond({ recordList : recordList }, 'no-stale-records')
 	} catch (err) {
 		reply.type('application/json').code(500)
