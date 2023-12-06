@@ -118,6 +118,7 @@ fastify.get('/api/list_all/:secretToken', async (request, reply) => {
 fastify.get('/api/clean_up', async (_, reply) => {
 	const recordList = []
 	try {
+		db.put('00sample00', demoRecord())
 		for await (const [key, value] of db.iterator()) {
 			const timersRemain = value.clientData.timers.map((x) => x.is_done).filter((x) => !x).length
 			const expStatus    = util_util.getExpiration(value.internals.addDate)
