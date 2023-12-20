@@ -191,8 +191,9 @@ fastify.post('/api/set/:timerID/:secretToken', async (request, reply) => {
 				timerRecord.clientData.timers[typeIDX].items[itemIDX].status = !timerRecord.clientData.timers[typeIDX].items[itemIDX].status
 				break
 			case 'timer' :
-				timerRecord.clientData.timers[typeIDX].is_active = false
-				timerRecord.clientData.timers[typeIDX].is_done   = true
+				timerRecord.clientData.timers[typeIDX].is_active    = false
+				timerRecord.clientData.timers[typeIDX].is_done      = true
+				timerRecord.clientData.timers[typeIDX].time_was_end = Date.now()
 
 				if ( !timerRecord.clientData.timers[typeIDX].is_down ) {
 					timerRecord.clientData.timers[typeIDX].elapse_total = (Date.now() - timerRecord.clientData.timers[typeIDX].time_was_start) / 1000
@@ -216,6 +217,7 @@ fastify.post('/api/set/:timerID/:secretToken', async (request, reply) => {
 				if ( typeof timerRecord.clientData.timers[typeIDX] !== 'undefined' ) {
 					timerRecord.clientData.timers[typeIDX].is_active      = false
 					timerRecord.clientData.timers[typeIDX].time_was_start = null
+					timerRecord.clientData.timers[typeIDX].time_was_end   = null
 					timerRecord.clientData.timers[typeIDX].is_done        = false
 					timerRecord.clientData.timers[typeIDX].elapse_total   = 0
 				}
@@ -224,6 +226,7 @@ fastify.post('/api/set/:timerID/:secretToken', async (request, reply) => {
 					timerRecord.clientData.timers[typeIDX-1].elapse_total = 0
 					timerRecord.clientData.timers[typeIDX-1].is_active    = true
 					timerRecord.clientData.timers[typeIDX-1].is_done      = false
+					timerRecord.clientData.timers[typeIDX-1].time_was_end   = null
 				}
 				break
 			default :

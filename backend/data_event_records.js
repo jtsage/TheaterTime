@@ -59,6 +59,7 @@ module.exports.demoRecord = () => {
 					name           : 'Pre Show',
 					reset_places   : false,
 					time_to_end    : sample_start_time.getTime(),
+					time_was_end   : null,
 					time_was_start : null,
 
 					items          : [
@@ -76,6 +77,7 @@ module.exports.demoRecord = () => {
 					name           : 'Act 1',
 					reset_places   : false,
 					time_to_end    : null,
+					time_was_end   : null,
 					time_was_start : null,
 				},
 				{
@@ -88,6 +90,7 @@ module.exports.demoRecord = () => {
 					name           : 'Intermission',
 					reset_places   : true,
 					time_to_end    : null,
+					time_was_end   : null,
 					time_was_start : null,
 				},
 				{
@@ -100,6 +103,7 @@ module.exports.demoRecord = () => {
 					name           : 'Act 2',
 					reset_places   : false,
 					time_to_end    : null,
+					time_was_end   : null,
 					time_was_start : null,
 				},
 			],

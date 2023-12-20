@@ -51,6 +51,8 @@ const printItemTime = (minutes) => {
 	return `-${hours.toString().padStart(2, 0)}:${mins.toString().padStart(2, 0)}:00`
 }
 
+const printFormatTime = (dateOBJ) => `${dateOBJ.getHours()%12 ? dateOBJ.getHours()%12 : 12}:${dateOBJ.getMinutes().toString().padStart(2, 0)} ${dateOBJ.getHours()>11?'PM':'AM'}`
+
 const parseTimer = (timerData) => {
 	if ( ! timerData.is_active && !timerData.is_done ) { return '--:--:--' }
 	if ( timerData.is_done && timerData.is_down ) { return '00:00:00' }
@@ -133,11 +135,23 @@ const makeSwitch = (switchData, isFirst, isAdmin) => {
 const makeTimer = (timerData, isFirst, isLast, anyActive, isAdmin) => {
 	const timeString  = parseTimer(timerData)
 	const showButtons = isAdmin && (timerData.is_active || (isLast && !anyActive))
+
+	const startStopString = []
+
+	if ( timerData.time_was_start !== null ) {
+		startStopString.push(`Start : ${printFormatTime(new Date(timerData.time_was_start))}`)
+	}
+
+	if ( timerData.time_was_end !== null ) {
+		startStopString.push(`End : ${printFormatTime(new Date(timerData.time_was_end))}`)
+	}
 	
 	return `<div class="card text-bg-light ${!isFirst ? 'mt-2' : ''}">
 		<div class="card-body text-center">
 			<h5 class="card-title">${timerData.name}</h5>
+			
 			<span class="card-text h2 font-monospace" id="${timerData.id}">${timeString}</span>
+			<span class="card-text h6 font-monospace d-block mb-0 mt-1">${startStopString.join(' | ')}</span>
 			${makeExtras(timerData.id, timerData.items, isAdmin)}
 		</div>
 		${ showButtons ? '<div class="card-footer"><div class="btn-group w-100">' : '' }
@@ -188,6 +202,9 @@ const clientAdminButton = (buttonName) => {
 	return false
 }
 
+const clientDoPasswordInput = (evt) => {
+	if ( evt.code === 'Enter' ) { clientDoPassword() }
+}
 const clientDoPassword = () => {
 	fetch('/api/hash_password', {
 		body           : JSON.stringify( { password : byID('password').value } ),
@@ -384,6 +401,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	deleteModal = new bootstrap.Modal('#deleteModal')
+
+	byID('loginModal').addEventListener('shown.bs.modal', () => {
+		byID('password').focus()
+	})
 
 	getData()
 })
