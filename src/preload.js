@@ -11,6 +11,8 @@ const {contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld(
 	'ipc', {
+		config : () => ipcRenderer.send('config'),
+		status : () => ipcRenderer.send('status'),
 		// get  : (key)       => ipcRenderer.invoke('i18n:get', key),
 		// lang : (nv = null) => ipcRenderer.invoke('i18n:lang', nv),
 		// list : ()          => ipcRenderer.invoke('i18n:langList'),

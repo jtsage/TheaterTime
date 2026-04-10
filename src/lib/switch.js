@@ -60,6 +60,7 @@ class Switch {
 	get config() {
 		return {
 			audioFile      : this.audioFile,
+			id             : this.id,
 			reset_switches : this.reset_switches,
 			reverseColor   : this.reverseColor,
 			textActive     : this.textActive,

@@ -4,7 +4,7 @@
     |_| |_|_|\___.<___| |_| \___.|_|  |_| |_||_|_|_|\___.
 	(c) 2026 J.T.Sage - MIT License
 */
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('node:path')
 // const Timers = require('lib/timer.js')
 // const Switches = require('lib/switch.js')
@@ -30,13 +30,19 @@ const createWindow = () => {
 
 	mainWindow.loadFile(path.join(__dirname, 'render', 'index.html'))
 	// console.log(dataStack.config)
-	mainWindow.webContents.send('config', dataStack.config)
+	// setInterval(() => {
+	// 	mainWindow.webContents.send('config', dataStack.config)
+	// }, 1000)
 }
 
+const outputConfig = () => {
+	mainWindow.webContents.send('config', dataStack.config)
+}
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+	ipcMain.on('config', outputConfig)
 	createWindow()
 
 	// On OS X it's common to re-create a window in the app when the
