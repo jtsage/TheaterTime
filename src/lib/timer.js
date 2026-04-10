@@ -2,7 +2,7 @@
    |_ _|| |_  ___  ___ _| |_ ___  _ _|_ _|<_>._ _ _  ___ 
     | | | . |/ ._><_> | | | / ._>| '_>| | | || ' ' |/ ._>
     |_| |_|_|\___.<___| |_| \___.|_|  |_| |_||_|_|_|\___.
-	(c) 2024 J.T.Sage - MIT License
+	(c) 2026 J.T.Sage - MIT License
 */
 const crypto = require('node:crypto')
 
@@ -19,7 +19,6 @@ const TimerType = Object.freeze({
 	UP        : 1,
 })
 
-
 class TimerStack {
 	#stack        = []
 	#init         = false
@@ -29,17 +28,37 @@ class TimerStack {
 		this.current_timer = 0
 	}
 
-	add_up(title, reset_switches = null) {
-		this.#stack.push(TimerUp(title, reset_switches))
+	add_stack(stack) {
+		if (Array.isArray(stack)) {
+			for (const timer of stack) {
+				this.add(timer)
+			}
+		}
+		return this.#stack.length
 	}
 
-	add_down(title, target, use_sound = false, reset_switches = null) {
-		this.#init = true
-		this.#stack.push(TimerDown(title, target, use_sound, reset_switches))
-	}
-
-	add_minutes(title, minutes, use_sound = false, reset_switches = null) {
-		this.#stack.push(TimerMinutes(title, minutes, use_sound, reset_switches))
+	add({
+		title          = null,
+		reset_switches = null,
+		use_sound      = false,
+		target         = null,
+		minutes        = null,
+		type           = TimerType.UNDEFINED,
+	} = {}) {
+		switch (type) {
+			case TimerType.UP :
+				this.#stack.push(new TimerUp(title, reset_switches))
+				break
+			case TimerType.DOWN :
+				this.#stack.push(new TimerDown(title, target, use_sound, reset_switches))
+				break
+			case TimerType.MINUTES :
+				this.#stack.push(new TimerMinutes(title, minutes, use_sound, reset_switches))
+				break
+			default :
+				break
+		}
+		return this.#stack.length
 	}
 
 	clear() {
@@ -82,6 +101,10 @@ class TimerStack {
 		return this.#init ?
 			this.#stack.map((timer) => timer.serialize) :
 			[]
+	}
+
+	get config() {
+		return this.#stack.map((timer) => timer.config)
 	}
 }
 
@@ -128,9 +151,10 @@ class TimerSTD {
 		this.dateStopped = null
 	}
 
-	constructor(title) {
-		this.title = title
-		this.uuid  = crypto.randomUUID()
+	constructor(title, reset_switches) {
+		this.title          = title
+		this.uuid           = crypto.randomUUID()
+		this.reset_switches = Array.isArray(reset_switches) ? reset_switches : []
 	}
 	
 	#dateOrNull(value) {
@@ -157,13 +181,23 @@ class TimerSTD {
 			uuid           : this.uuid,
 		}
 	}
+
+	get config() {
+		return {
+			reset_switches   : this.reset_switches,
+			sound_countdowns : this.sound_countdowns,
+			targetDateTime   : this.type === TimerType.DOWN ? this.targetDateTime   : null,
+			targetMinutes    : this.type === TimerType.MINUTES ? this.targetMinutes : null,
+			title            : this.title,
+			type             : this.type,
+		}
+	}
 }
 
 // MARK: TimerCountUp
 class TimerUp extends TimerSTD {
 	constructor(title, reset_switches = null) {
-		super(title)
-		this.reset_switches = Array.isArray(reset_switches) ? reset_switches : []
+		super(title, reset_switches)
 		this.type = TimerType.UP
 	}
 
@@ -187,10 +221,9 @@ class TimerUp extends TimerSTD {
 // MARK: TimerCountDown
 class TimerMinutes extends TimerSTD {
 	constructor(title, minutes, use_sound = false, reset_switches = null) {
-		super(title)
+		super(title, reset_switches)
 		this.targetMinutes    = minutes
 		this.sound_countdowns = use_sound
-		this.reset_switches   = Array.isArray(reset_switches) ? reset_switches : []
 		this.type             = TimerType.MINUTES
 	}
 
@@ -227,10 +260,9 @@ class TimerMinutes extends TimerSTD {
 // MARK: TimerABSCountDown
 class TimerDown extends TimerSTD {
 	constructor(title, target, use_sound = false, reset_switches = null) {
-		super(title)
+		super(title, reset_switches)
 		this.targetDateTime   = target
 		this.sound_countdowns = use_sound
-		this.reset_switches   = Array.isArray(reset_switches) ? reset_switches : []
 		this.type             = TimerType.DOWN
 
 		this.start()
@@ -253,8 +285,74 @@ class TimerDown extends TimerSTD {
 	}
 }
 
+const today_time = (hour, minute) => {
+	const now = new Date()
+	now.setSeconds(0)
+	now.setMilliseconds(0)
+	now.setHours(hour)
+	now.setMinutes(minute)
+	return now
+}
+
+const DefaultShow = [
+	{
+		minutes        : null,
+		reset_switches : null,
+		target         : today_time(19, 30),
+		title          : 'Pre-Show',
+		type           : TimerType.DOWN,
+		use_sound      : true,
+	},
+	{
+		minutes        : null,
+		reset_switches : null,
+		target         : null,
+		title          : 'Act I',
+		type           : TimerType.UP,
+		use_sound      : false,
+	},
+	{
+		minutes        : 15,
+		reset_switches : ['switch-places'],
+		target         : null,
+		title          : 'Intermission',
+		type           : TimerType.MINUTES,
+		use_sound      : true,
+	},
+	{
+		minutes        : null,
+		reset_switches : null,
+		target         : null,
+		title          : 'Act II',
+		type           : TimerType.UP,
+		use_sound      : false,
+	},
+]
+
+const DefaultRehearsal = [
+	{
+		minutes        : null,
+		reset_switches : null,
+		target         : today_time(17, 0),
+		title          : 'Rehearsal Start',
+		type           : TimerType.DOWN,
+		use_sound      : true,
+	},
+	{
+		minutes        : null,
+		reset_switches : null,
+		target         : today_time(22, 0),
+		title          : 'Rehearsal End',
+		type           : TimerType.DOWN,
+		use_sound      : true,
+	},
+]
+
 module.exports = {
+	Stack  : TimerStack,
 	Status : TimerStatus,
 	Type   : TimerType,
-	Stack  : TimerStack,
+
+	DefaultRehearsal : DefaultRehearsal,
+	DefaultShow      : DefaultShow,
 }
