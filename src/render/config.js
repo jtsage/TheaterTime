@@ -3,6 +3,8 @@
     | | | . |/ ._><_> | | | / ._>| '_>| | | || ' ' |/ ._>
     |_| |_|_|\___.<___| |_| \___.|_|  |_| |_||_|_|_|\___.
 	(c) 2026 J.T.Sage - MIT License
+
+	Configuration Interaction
 */
 /* global bootstrap */
 
@@ -11,11 +13,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const saveWarning = new bootstrap.Modal(document.getElementById('save-warning'))
 
+	document.getElementById('click-add-timer').addEventListener('click', () => { clientAddTimer() })
+	document.getElementById('click-add-switch').addEventListener('click', () => { clientAddSwitch() })
+
 	document.getElementById('discard-button').addEventListener('click', () => {
 		window.ipc.config()
 		saveWarning.hide()
-		newTab.show()
-		newTab = null
+		winStatus.nextTab.show()
+		winStatus.nextTab = null
 	})
 
 	for (const triggerEl of document.querySelectorAll('#main-tab button')) {
@@ -23,32 +28,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		triggerEl.addEventListener('click', (event) => {
 			event.preventDefault()
-			if ( dirtyDetails ) {
-				newTab = tabTrigger
+			if ( winStatus.dirty ) {
+				winStatus.nextTab = tabTrigger
 				saveWarning.show()
 			} else {
 				tabTrigger.show()
 			}
 		})
 	}
-
-	// document.getElementById('main-tab').addEventListener('hide.bs.tab', (e) => {
-	// 	// reload data on tab change
-	// 	return false
-	// 	// window.ipc.config()
-	// })
 })
 
-const switchList = []
-let timerCount = 0
-let dirtyDetails = true
-let newTab = null
-
-// const TimerStatus = Object.freeze({
-// 	0 : 'Pending',
-// 	1 : 'Running',
-// 	2 : 'Finished',
-// })
+const winStatus = {
+	dirty      : true,
+	nextTab    : null,
+	switchList : [],
+	timerCount : 0,
+}
 
 const TimerType = Object.freeze({
 	0 : '!!Invalid!!',
@@ -57,20 +52,15 @@ const TimerType = Object.freeze({
 	3 : 'Count Down to # of Minutes',
 })
 
-// const SwitchStatus = Object.freeze({
-// 	0 : 'Inactive',
-// 	1 : 'Active',
-// })
-
 window.ipc.receive('config', (data) => {
 	// eslint-disable-next-line no-console
 	console.log(data)
 
-	dirtyDetails = false
-	timerCount = data.timers.length
-	switchList.length = 0
+	winStatus.dirty = false
+	winStatus.timerCount = data.timers.length
+	winStatus.switchList.length = 0
 	for ( const toggle of data.toggle ) {
-		switchList.push([toggle.id, toggle.title])
+		winStatus.switchList.push([toggle.id, toggle.title])
 	}
 
 	const switchConfig = document.getElementById('toggle-config')
@@ -173,7 +163,7 @@ const remove_item = (e, type = 'switch') => {
 }
 
 const mark_item = (e) => {
-	dirtyDetails = true
+	winStatus.dirty = true
 	const card = e.target.closest('div.card')
 	card.classList.add('bg-primary-subtle')
 
@@ -334,7 +324,7 @@ const HTMLSelectResets = (selected) => {
 		'<div class="input-group mb-1">',
 		'<span title="Reset switches on start" class="input-group-text w-25">Reset Switch(es)</span>',
 		'<div class="form-control">',
-		...switchList.flatMap((element) => {
+		...winStatus.switchList.flatMap((element) => {
 			let isSelected = false
 			for ( const check of selects ) {
 				if ( check === element[0] ) { isSelected = true }
@@ -350,6 +340,7 @@ const HTMLSelectResets = (selected) => {
 
 
 function clientAddSwitch() {
+	document.getElementById('click-add-switch').classList.add('d-none')
 	const thisSwitch = document.createElement('div')
 	thisSwitch.innerHTML = SwitchConfigHTML({
 		audioFile      : '',
@@ -358,7 +349,7 @@ function clientAddSwitch() {
 		textActive     : 'ON',
 		textInactive   : 'OFF',
 		title          : '',
-	}, switchList.length, true)
+	}, winStatus.switchList.length, true)
 	thisSwitch.querySelector('.action-btn[data-action="save-switch"]').addEventListener('click', () => save_item(false))
 	thisSwitch.querySelector('.action-btn[data-action="reload"]').addEventListener('click', () => { window.ipc.config() })
 	
@@ -366,6 +357,7 @@ function clientAddSwitch() {
 }
 
 function clientAddTimer() {
+	document.getElementById('click-add-timer').classList.add('d-none')
 	const thisTimer = document.createElement('div')
 	thisTimer.innerHTML = TimerConfigHTML({
 		minutes          : null,
@@ -374,7 +366,7 @@ function clientAddTimer() {
 		target           : new Date(),
 		title            : '',
 		type             : 2,
-	}, timerCount, true)
+	}, winStatus.timerCount, true)
 	thisTimer.querySelector('.action-btn[data-action="save-timer"]').addEventListener('click', () => save_item(false))
 	thisTimer.querySelector('.action-btn[data-action="reload"]').addEventListener('click', () => { window.ipc.config() })
 	

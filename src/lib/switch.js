@@ -125,6 +125,16 @@ class SwitchStack {
 		this.#stack[index].off()
 	}
 
+	toggle(index) {
+		if ( this.#stack[index].isOn ) {
+			this.#stack[index].off()
+			return null
+		}
+		
+		this.#stack[index].on()
+		return this.#stack[index].audioFile
+	}
+
 	get all() {
 		return this.#stack.map((toggle) => toggle.serialize)
 	}
@@ -136,7 +146,7 @@ class SwitchStack {
 
 const SwitchDefault = [
 	{
-		audioFile      : 'mics.wav',
+		audioFile      : 'mics',
 		reset_switches : null,
 		reverseColor   : false,
 		textActive     : 'Microphones ARE Ready',
@@ -144,7 +154,7 @@ const SwitchDefault = [
 		title          : 'Microphones',
 	},
 	{
-		audioFile      : 'house.wav',
+		audioFile      : 'house',
 		reset_switches : null,
 		reverseColor   : false,
 		textActive     : 'House is OPEN',
@@ -152,7 +162,7 @@ const SwitchDefault = [
 		title          : 'House',
 	},
 	{
-		audioFile      : 'places.wav',
+		audioFile      : 'places',
 		reset_switches : ['switch-house-hold'],
 		reverseColor   : false,
 		textActive     : 'Places HAS been called',
@@ -160,7 +170,7 @@ const SwitchDefault = [
 		title          : 'Places',
 	},
 	{
-		audioFile      : 'hold.wav',
+		audioFile      : 'hold',
 		reset_switches : null,
 		reverseColor   : true,
 		textActive     : 'House Hold is REQUIRED',

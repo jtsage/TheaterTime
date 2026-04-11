@@ -19,13 +19,15 @@ contextBridge.exposeInMainWorld(
 
 		saveSwitch : (data) => ipcRenderer.send('switch:save', data),
 		saveTimer  : (data) => ipcRenderer.send('timer:save', data),
-		// get  : (key)       => ipcRenderer.invoke('i18n:get', key),
-		// lang : (nv = null) => ipcRenderer.invoke('i18n:lang', nv),
-		// list : ()          => ipcRenderer.invoke('i18n:langList'),
+
+		nextTimer    : () => ipcRenderer.send('timer:next'),
+		toggleSwitch : (index) => ipcRenderer.send('switch:toggle', index),
 
 		receive   : ( channel, func ) => {
 			const validChannels = new Set([
 				'config',
+				'status',
+				'update',
 			])
 		
 			if ( validChannels.has( channel ) ) {

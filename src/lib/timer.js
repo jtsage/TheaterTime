@@ -34,6 +34,7 @@ class TimerStack {
 				this.add(timer)
 			}
 		}
+		this.#init = true
 		return this.#stack.length
 	}
 
@@ -62,6 +63,7 @@ class TimerStack {
 			default :
 				break
 		}
+		this.#init = true
 		return this.#stack.length
 	}
 
@@ -105,6 +107,12 @@ class TimerStack {
 		return this.#init ?
 			this.#stack.map((timer) => timer.serialize) :
 			[]
+	}
+
+	get update() {
+		return this.#stack
+			.filter((timer) => timer.status === TimerStatus.RUNNING)
+			.map((timer) => timer.update)
 	}
 
 	get config() {
@@ -166,11 +174,16 @@ class TimerSTD {
 		return value.toISOString()
 	}
 
-	timeFormat(value) {
-		const hours   = value % 60*60
-		const minutes = (value - (hours*60*60)) % 60
-		const seconds = value - (hours*60*60) - (minutes*60)
-		return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+	formatTime(dir, value, flip = false) {
+		const sign = value === 0 ? '' : (value < 0 || value > 0 && flip) ? '+ ' : '- '
+		const total = Math.abs(value)
+		const hours = Math.floor(total / (60*60))
+		const minutes = Math.floor((total - (hours*60*60)) / 60)
+		const seconds = Math.floor(total % 60)
+		return `${dir}${sign}${this.#zPad(hours)}:${this.#zPad(minutes)}:${this.#zPad(seconds)}`
+	}
+	#zPad(num) {
+		return num.toString().padStart(2, '0')
 	}
 
 	get serialize() {
@@ -183,6 +196,19 @@ class TimerSTD {
 			title          : this.title,
 			type           : this.type,
 			uuid           : this.uuid,
+		}
+	}
+
+	get update() { return { uuid : this.uuid } }
+
+	timeAudio(time) {
+		switch ( time ) {
+			case 1800 : return '30min'
+			case 1200 : return '20min'
+			case 900  : return '15min'
+			case 600  : return '10min'
+			case 300  : return '5min'
+			default   : return null
 		}
 	}
 
@@ -208,16 +234,28 @@ class TimerUp extends TimerSTD {
 	get time() {
 		switch (this.status) {
 			case TimerStatus.PENDING : return 0
+			case TimerStatus.FINISHED : return Math.floor((this.dateStopped - this.dateStarted) / 1000)
 			default : return Math.floor((new Date() - this.dateStarted) / 1000)
 		}
 	}
 
 	get serialize() {
 		const time = this.time
+		const dir = this.status === TimerStatus.RUNNING ? '↑ ' : ''
 		return {
 			wholeSeconds : time,
-			formatTime   : this.formatTime(time),
+			formatTime   : this.formatTime(dir, time, true),
 			...super.serialize,
+		}
+	}
+
+	get update() {
+		const time = this.time
+		const dir = this.status === TimerStatus.RUNNING ? '↑ ' : ''
+		return {
+			audio        : null,
+			formatTime   : this.formatTime(dir, time, true),
+			...super.update,
 		}
 	}
 }
@@ -247,16 +285,28 @@ class TimerMinutes extends TimerSTD {
 		switch (this.status) {
 			case TimerStatus.PENDING : return this.targetMinutes * 60
 			case TimerStatus.RUNNING : return Math.floor((this.targetDateTime - new Date()) / 1000)
+			case TimerStatus.FINISHED : return Math.floor((this.dateStopped - this.dateStarted) / 1000)
 			default : return 0
 		}
 	}
 
 	get serialize() {
 		const time = this.time
+		const dir = this.status === TimerStatus.RUNNING ? '↓ ' : ''
 		return {
 			wholeSeconds : time,
-			formatTime   : this.formatTime(time),
+			formatTime   : this.formatTime(dir, time),
 			...super.serialize,
+		}
+	}
+
+	get update() {
+		const time = this.time
+		const dir = this.status === TimerStatus.RUNNING ? '↓ ' : ''
+		return {
+			audio        : this.sound_countdowns ? super.timeAudio(time) : null,
+			formatTime   : this.formatTime(dir, time),
+			...super.update,
 		}
 	}
 }
@@ -281,16 +331,28 @@ class TimerDown extends TimerSTD {
 	get time() {
 		switch (this.status) {
 			case TimerStatus.PENDING : return 0
+			case TimerStatus.FINISHED : return Math.floor((this.targetDateTime - this.dateStopped) / 1000)
 			default : return Math.floor((this.targetDateTime - new Date()) / 1000)
 		}
 	}
 
 	get serialize() {
 		const time = this.time
+		const dir = this.status === TimerStatus.RUNNING ? '↓ ' : ''
 		return {
 			wholeSeconds : time,
-			formatTime   : this.formatTime(time),
+			formatTime   : this.formatTime(dir, time),
 			...super.serialize,
+		}
+	}
+
+	get update() {
+		const time = this.time
+		const dir = this.status === TimerStatus.RUNNING ? '↓ ' : ''
+		return {
+			audio        : this.sound_countdowns ? super.timeAudio(time) : null,
+			formatTime   : this.formatTime(dir, time),
+			...super.update,
 		}
 	}
 }
@@ -308,7 +370,8 @@ const DefaultShow = [
 	{
 		minutes        : null,
 		reset_switches : null,
-		target         : today_time(19, 30),
+		target         : today_time(10, 30),
+		// target         : today_time(19, 30),
 		title          : 'Pre-Show',
 		type           : TimerType.DOWN,
 		use_sound      : true,

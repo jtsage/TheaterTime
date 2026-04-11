@@ -39,12 +39,15 @@ const createWindow = () => {
 }
 
 const outputConfig = () => { mainWindow.webContents.send('config', dataStack.config) }
+const outputStatus = () => { mainWindow.webContents.send('status', dataStack.status) }
+const outputUpdate = () => { mainWindow.webContents.send('update', dataStack.update) }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
 	ipcMain.on('config', outputConfig)
+	ipcMain.on('status', outputStatus)
 
 	ipcMain.on('switch:save', (_, data) => {
 		dataStack.toggle.clear()
@@ -54,6 +57,10 @@ app.whenReady().then(() => {
 	ipcMain.on('switch:remove', (_, index) => {
 		dataStack.toggle.remove(index)
 		outputConfig()
+	})
+	ipcMain.on('switch:toggle', (_, index) => {
+		dataStack.toggleSwitch(index)
+		outputStatus()
 	})
 
 	ipcMain.on('timer:save', (_, data) => {
@@ -65,8 +72,14 @@ app.whenReady().then(() => {
 		dataStack.timers.remove(index)
 		outputConfig()
 	})
+	ipcMain.on('timer:next', () => {
+		dataStack.timers.next()
+		outputStatus()
+	})
 
 	createWindow()
+
+	setInterval(outputUpdate, 1000)
 
 	// On OS X it's common to re-create a window in the app when the
 	// dock icon is clicked and there are no other windows open.
