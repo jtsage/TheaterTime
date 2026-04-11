@@ -2,36 +2,29 @@
 <html lang="en" data-bs-theme="dark">
 	<head>
 		<meta charset="UTF-8">
+		<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:">
 		<title>TheaterTime</title>
 		<link href="inc/bootstrap.min.css" rel="stylesheet" type="text/css">
 		<link href="inc/bootstrap-icons.min.css" rel="stylesheet" type="text/css">
+		<link href="inc/ui.css" rel="stylesheet" type="text/css">
 		<script src="inc/bootstrap.min.js"></script>
 		<script src="ui.js"></script>
-		<style>
-			#mainHead {
-				margin-bottom: -0.75em;
-			}
-			.otherHead {
-				margin-top: -1.35em;
-				margin-bottom: 0.35em;
-			}
-		</style>
 	</head>
 
 	<body>
 		<h1 class="text-end h2 mt-1 me-1 d-none" id="mainHead">TheaterTime</h1>
 		<ul class="nav nav-tabs" id="main-tab" role="tablist">
 			<li class="nav-item" role="presentation">
-				<button class="nav-link" id="status-tab" data-bs-toggle="tab" data-bs-target="#status-tab-pane" type="button" role="tab" aria-controls="status-tab-pane" aria-selected="true">Status</button>
+				<button class="nav-link" id="status-tab" data-bs-target="#status-tab-pane" type="button" role="tab" aria-controls="status-tab-pane" aria-selected="true">Status</button>
 			</li>
 			<li class="nav-item" role="presentation">
-				<button class="nav-link active" id="timer-tab" data-bs-toggle="tab" data-bs-target="#timer-tab-pane" type="button" role="tab" aria-controls="timer-tab-pane" aria-selected="false">Timers</button>
+				<button class="nav-link active" id="timer-tab" data-bs-target="#timer-tab-pane" type="button" role="tab" aria-controls="timer-tab-pane" aria-selected="false">Timers</button>
 			</li>
 			<li class="nav-item" role="presentation">
-				<button class="nav-link" id="toggle-tab" data-bs-toggle="tab" data-bs-target="#toggle-tab-pane" type="button" role="tab" aria-controls="toggle-tab-pane" aria-selected="false">Switches</button>
+				<button class="nav-link" id="toggle-tab" data-bs-target="#toggle-tab-pane" type="button" role="tab" aria-controls="toggle-tab-pane" aria-selected="false">Switches</button>
 			</li>
 			<li class="nav-item" role="presentation">
-				<button class="nav-link" id="config-tab" data-bs-toggle="tab" data-bs-target="#config-tab-pane" type="button" role="tab" aria-controls="config-tab-pane" aria-selected="false">Configuration</button>
+				<button class="nav-link" id="config-tab" data-bs-target="#config-tab-pane" type="button" role="tab" aria-controls="config-tab-pane" aria-selected="false">Configuration</button>
 			</li>
 		</ul>
 		<div class="tab-content" id="main-tab-content">
@@ -41,6 +34,7 @@
 			<div class="tab-pane fade show active" id="timer-tab-pane" role="tabpanel" aria-labelledby="timer-tab" tabindex="0">
 				<h2 class="text-end h3 otherHead">Timer Configuration</h2>
 				<div id="timer-config" class="w-100 px-2"></div>
+				<button type="button" onclick="clientAddTimer()" class="btn btn-primary w-75 mb-2 mx-auto d-block">Add Timer</button>
 			</div>
 			<div class="tab-pane fade" id="toggle-tab-pane" role="tabpanel" aria-labelledby="toggle-tab" tabindex="0">
 				<h2 class="text-end h3 otherHead">Switch Configuration</h2>
@@ -50,6 +44,19 @@
 			<div class="tab-pane fade" id="config-tab-pane" role="tabpanel" aria-labelledby="config-tab" tabindex="0">
 				four
 			</div>
+		</div>
+
+		<div class="modal fade" id="save-warning" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+			<div class="modal-dialog"><div class="modal-content">
+				<div class="modal-header"><h5 class="modal-title">Warning!</h5></div>
+				<div class="modal-body">
+					<p>Some settings are not saved. Save or discard them first please</p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" id="discard-button" class="btn btn-danger">Discard Changes</button>
+					<button type="button" class="btn btn-success" data-bs-dismiss="modal">Cancel Navigation</button>
+				</div>
+			</div></div>
 		</div>
 	</body>
 </html>

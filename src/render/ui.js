@@ -4,20 +4,45 @@
     |_| |_|_|\___.<___| |_| \___.|_|  |_| |_||_|_|_|\___.
 	(c) 2026 J.T.Sage - MIT License
 */
+/* global bootstrap */
 
 document.addEventListener('DOMContentLoaded', () => {
 	window.ipc.config()
 
-	document.getElementById('main-tab').addEventListener('hide.bs.tab', (e) => {
-		// reload data on tab change
-		return false
-		// window.ipc.config()
+	const saveWarning = new bootstrap.Modal(document.getElementById('save-warning'))
+
+	document.getElementById('discard-button').addEventListener('click', () => {
+		window.ipc.config()
+		saveWarning.hide()
+		newTab.show()
+		newTab = null
 	})
+
+	for (const triggerEl of document.querySelectorAll('#main-tab button')) {
+		const tabTrigger = new bootstrap.Tab(triggerEl)
+
+		triggerEl.addEventListener('click', (event) => {
+			event.preventDefault()
+			if ( dirtyDetails ) {
+				newTab = tabTrigger
+				saveWarning.show()
+			} else {
+				tabTrigger.show()
+			}
+		})
+	}
+
+	// document.getElementById('main-tab').addEventListener('hide.bs.tab', (e) => {
+	// 	// reload data on tab change
+	// 	return false
+	// 	// window.ipc.config()
+	// })
 })
 
 const switchList = []
 let timerCount = 0
 let dirtyDetails = true
+let newTab = null
 
 // const TimerStatus = Object.freeze({
 // 	0 : 'Pending',
@@ -38,8 +63,10 @@ const TimerType = Object.freeze({
 // })
 
 window.ipc.receive('config', (data) => {
+	// eslint-disable-next-line no-console
 	console.log(data)
 
+	dirtyDetails = false
 	timerCount = data.timers.length
 	switchList.length = 0
 	for ( const toggle of data.toggle ) {
@@ -54,7 +81,10 @@ window.ipc.receive('config', (data) => {
 	timer_details()
 
 	for (const element of document.querySelectorAll('#timer-config select, #timer-config input, #toggle-config input')) {
-		element.addEventListener('change', (e) => mark_item(e))
+		element.addEventListener('change', (e) => {
+			timer_details()
+			mark_item(e)
+		})
 	}
 
 	for (const element of document.querySelectorAll('.action-btn')) {
@@ -101,15 +131,15 @@ const save_item = (timers = true) => {
 			}
 			switch (jsonData?.type) {
 				case 1 :
-					jsonData.targetMinutes = null
-					jsonData.targetDateTime = null
+					jsonData.minutes = null
+					jsonData.target = null
 					break
 				case 2 :
-					jsonData.targetMinutes = null
+					jsonData.minutes = null
 					break
 				case 3 :
-					jsonData.targetDateTime = null
-					jsonData.targetMinutes = parseInt(jsonData.targetMinutes, 10)
+					jsonData.target = null
+					jsonData.minutes = parseInt(jsonData.minutes, 10)
 					break
 				default :
 					break
@@ -143,30 +173,30 @@ const remove_item = (e, type = 'switch') => {
 }
 
 const mark_item = (e) => {
+	dirtyDetails = true
 	const card = e.target.closest('div.card')
 	card.classList.add('bg-primary-subtle')
 
 	const container = card.parentElement
-	for (const element of container.querySelectorAll('.action-btn[data-action="reload"], .action-btn[data-action="save-*"]')) {
-		console.log(element)
+	for (const element of container.querySelectorAll('.action-btn[data-action="reload"], .action-btn[data-action^="save-"]')) {
 		element.classList.remove('d-none')
 	}
 }
 
 const timer_details = () => {
-	for (const card of document.querySelectorAll('#timer-config>.card')) {
+	for (const card of document.querySelectorAll('.timer-card')) {
 		switch (card.querySelector('select[name="type"]').value) {
 			case '1' :
-				card.querySelector('input[name="targetMinutes"]').parentElement.classList.add('d-none')
-				card.querySelector('input[name="targetDateTime"]').parentElement.classList.add('d-none')
+				card.querySelector('input[name="minutes"]').parentElement.classList.add('d-none')
+				card.querySelector('input[name="target"]').parentElement.classList.add('d-none')
 				break
 			case '2' :
-				card.querySelector('input[name="targetMinutes"]').parentElement.classList.add('d-none')
-				card.querySelector('input[name="targetDateTime"]').parentElement.classList.remove('d-none')
+				card.querySelector('input[name="minutes"]').parentElement.classList.add('d-none')
+				card.querySelector('input[name="target"]').parentElement.classList.remove('d-none')
 				break
 			case '3' :
-				card.querySelector('input[name="targetMinutes"]').parentElement.classList.remove('d-none')
-				card.querySelector('input[name="targetDateTime"]').parentElement.classList.add('d-none')
+				card.querySelector('input[name="minutes"]').parentElement.classList.remove('d-none')
+				card.querySelector('input[name="target"]').parentElement.classList.add('d-none')
 				break
 			default :
 				break
@@ -183,7 +213,7 @@ const timer_date_time = (date) => {
 
 const TimerConfigHTML = (timer, index, create = false) => {
 	return [
-		'<div class="card mb-2">',
+		'<div class="card mb-2 timer-card">',
 		'<div class="card-header d-flex">',
 		`<div class="fw-bold">Timer #${index+1}</div><div class="me-0 ms-auto">`,
 		...HTMLButtons('timer', index, create, true),
@@ -207,12 +237,12 @@ const TimerConfigHTML = (timer, index, create = false) => {
 
 		'<div class="input-group mb-1">',
 		'<span title="Title of timer" class="input-group-text w-25">Minutes</span>',
-		`<input type="number" step="1" min="1" max="60" class="form-control text-end" name="targetMinutes" value="${timer.targetMinutes !== null ? timer.targetMinutes : 10}">`,
+		`<input type="number" step="1" min="1" max="60" class="form-control text-end" name="minutes" value="${timer.minutes !== null ? timer.minutes : 10}">`,
 		'</div>',
 		
 		'<div class="input-group mb-1">',
 		'<span title="Title of timer" class="input-group-text w-25">Target</span>',
-		`<input type="datetime-local" class="form-control text-end" name="targetDateTime" value="${timer_date_time(timer.targetDateTime)}">`,
+		`<input type="datetime-local" class="form-control text-end" name="target" value="${timer_date_time(timer.target)}">`,
 		'</div>',
 
 		...HTMLSelectResets(timer.reset_switches),
@@ -333,4 +363,27 @@ function clientAddSwitch() {
 	thisSwitch.querySelector('.action-btn[data-action="reload"]').addEventListener('click', () => { window.ipc.config() })
 	
 	document.getElementById('toggle-config').append(thisSwitch)
+}
+
+function clientAddTimer() {
+	const thisTimer = document.createElement('div')
+	thisTimer.innerHTML = TimerConfigHTML({
+		minutes          : null,
+		reset_switches   : null,
+		sound_countdowns : false,
+		target           : new Date(),
+		title            : '',
+		type             : 2,
+	}, timerCount, true)
+	thisTimer.querySelector('.action-btn[data-action="save-timer"]').addEventListener('click', () => save_item(false))
+	thisTimer.querySelector('.action-btn[data-action="reload"]').addEventListener('click', () => { window.ipc.config() })
+	
+	thisTimer.querySelector('.card').classList.add('bg-primary-subtle')
+
+	for (const element of thisTimer.querySelectorAll('select')) {
+		element.addEventListener('change', () => { timer_details() })
+	}
+
+	document.getElementById('timer-config').append(thisTimer)
+	timer_details()
 }

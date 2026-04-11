@@ -188,10 +188,10 @@ class TimerSTD {
 
 	get config() {
 		return {
+			minutes          : this.type === TimerType.MINUTES ? this.targetMinutes : null,
 			reset_switches   : this.reset_switches,
 			sound_countdowns : this.sound_countdowns,
-			targetDateTime   : this.type === TimerType.DOWN ? this.targetDateTime   : null,
-			targetMinutes    : this.type === TimerType.MINUTES ? this.targetMinutes : null,
+			target           : this.type === TimerType.DOWN ? this.targetDateTime   : null,
 			title            : this.title,
 			type             : this.type,
 		}
@@ -265,11 +265,13 @@ class TimerMinutes extends TimerSTD {
 class TimerDown extends TimerSTD {
 	constructor(title, target, use_sound = false, reset_switches = null) {
 		super(title, reset_switches)
+
 		if ( target instanceof Date ) {
 			this.targetDateTime   = target
 		} else {
 			this.targetDateTime   = new Date(target)
 		}
+
 		this.sound_countdowns = use_sound
 		this.type             = TimerType.DOWN
 
