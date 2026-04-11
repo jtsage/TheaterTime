@@ -13,6 +13,12 @@ contextBridge.exposeInMainWorld(
 	'ipc', {
 		config : () => ipcRenderer.send('config'),
 		status : () => ipcRenderer.send('status'),
+
+		removeSwitch : (index) => ipcRenderer.send('switch:remove', index),
+		removeTimer  : (index) => ipcRenderer.send('timer:remove', index),
+
+		saveSwitch : (data) => ipcRenderer.send('switch:save', data),
+		saveTimer  : (data) => ipcRenderer.send('timer:save', data),
 		// get  : (key)       => ipcRenderer.invoke('i18n:get', key),
 		// lang : (nv = null) => ipcRenderer.invoke('i18n:lang', nv),
 		// list : ()          => ipcRenderer.invoke('i18n:langList'),

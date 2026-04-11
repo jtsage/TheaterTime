@@ -21,28 +21,36 @@ const dataStack = new ThrTime.Stack()
 // Create the browser window.
 const createWindow = () => {
 	mainWindow = new BrowserWindow({
-		width : 800,
-		height : 600,
+		height : 800,
+		title  : 'TheaterTime',
+		width  : 1000,
+
 		webPreferences : {
 			preload :  path.join(__dirname, 'preload.js'),
 		},
 	})
 
 	mainWindow.loadFile(path.join(__dirname, 'render', 'index.html'))
-	// console.log(dataStack.config)
-	// setInterval(() => {
-	// 	mainWindow.webContents.send('config', dataStack.config)
-	// }, 1000)
 }
 
-const outputConfig = () => {
-	mainWindow.webContents.send('config', dataStack.config)
-}
+const outputConfig = () => { mainWindow.webContents.send('config', dataStack.config) }
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
 	ipcMain.on('config', outputConfig)
+
+	ipcMain.on('switch:save', (_, data) => {
+		dataStack.toggle.clear()
+		dataStack.toggle.add_stack(data)
+		outputConfig()
+	})
+	ipcMain.on('switch:remove', (_, index) => {
+		dataStack.toggle.remove(index)
+		outputConfig()
+	})
+
 	createWindow()
 
 	// On OS X it's common to re-create a window in the app when the

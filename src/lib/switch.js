@@ -84,6 +84,10 @@ class SwitchStack {
 		return this.#stack.length
 	}
 
+	remove(index) {
+		this.#stack.splice(index, 1)
+	}
+
 	add({
 		title,
 		audioFile      = null,
@@ -156,7 +160,7 @@ const SwitchDefault = [
 		title          : 'Places',
 	},
 	{
-		audioFile      : 'mics.wav',
+		audioFile      : 'hold.wav',
 		reset_switches : null,
 		reverseColor   : true,
 		textActive     : 'House Hold is REQUIRED',

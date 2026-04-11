@@ -2,8 +2,9 @@
 <html lang="en" data-bs-theme="dark">
 	<head>
 		<meta charset="UTF-8">
-		<title>Hello World!</title>
+		<title>TheaterTime</title>
 		<link href="inc/bootstrap.min.css" rel="stylesheet" type="text/css">
+		<link href="inc/bootstrap-icons.min.css" rel="stylesheet" type="text/css">
 		<script src="inc/bootstrap.min.js"></script>
 		<script src="ui.js"></script>
 		<style>
@@ -24,10 +25,10 @@
 				<button class="nav-link" id="status-tab" data-bs-toggle="tab" data-bs-target="#status-tab-pane" type="button" role="tab" aria-controls="status-tab-pane" aria-selected="true">Status</button>
 			</li>
 			<li class="nav-item" role="presentation">
-				<button class="nav-link" id="timer-tab" data-bs-toggle="tab" data-bs-target="#timer-tab-pane" type="button" role="tab" aria-controls="timer-tab-pane" aria-selected="false">Timers</button>
+				<button class="nav-link active" id="timer-tab" data-bs-toggle="tab" data-bs-target="#timer-tab-pane" type="button" role="tab" aria-controls="timer-tab-pane" aria-selected="false">Timers</button>
 			</li>
 			<li class="nav-item" role="presentation">
-				<button class="nav-link active" id="toggle-tab" data-bs-toggle="tab" data-bs-target="#toggle-tab-pane" type="button" role="tab" aria-controls="toggle-tab-pane" aria-selected="false">Switches</button>
+				<button class="nav-link" id="toggle-tab" data-bs-toggle="tab" data-bs-target="#toggle-tab-pane" type="button" role="tab" aria-controls="toggle-tab-pane" aria-selected="false">Switches</button>
 			</li>
 			<li class="nav-item" role="presentation">
 				<button class="nav-link" id="config-tab" data-bs-toggle="tab" data-bs-target="#config-tab-pane" type="button" role="tab" aria-controls="config-tab-pane" aria-selected="false">Configuration</button>
@@ -37,13 +38,14 @@
 			<div class="tab-pane fade" id="status-tab-pane" role="tabpanel" aria-labelledby="status-tab" tabindex="0">
 				hi
 			</div>
-			<div class="tab-pane fade" id="timer-tab-pane" role="tabpanel" aria-labelledby="timer-tab" tabindex="0">
+			<div class="tab-pane fade show active" id="timer-tab-pane" role="tabpanel" aria-labelledby="timer-tab" tabindex="0">
 				<h2 class="text-end h3 otherHead">Timer Configuration</h2>
 				<div id="timer-config" class="w-100 px-2"></div>
 			</div>
-			<div class="tab-pane fade show active" id="toggle-tab-pane" role="tabpanel" aria-labelledby="toggle-tab" tabindex="0">
+			<div class="tab-pane fade" id="toggle-tab-pane" role="tabpanel" aria-labelledby="toggle-tab" tabindex="0">
 				<h2 class="text-end h3 otherHead">Switch Configuration</h2>
 				<div id="toggle-config" class="w-100 px-2"></div>
+				<button type="button" onclick="clientAddSwitch()" class="btn btn-primary w-75 mb-2 mx-auto d-block">Add Switch</button>
 			</div>
 			<div class="tab-pane fade" id="config-tab-pane" role="tabpanel" aria-labelledby="config-tab" tabindex="0">
 				four
