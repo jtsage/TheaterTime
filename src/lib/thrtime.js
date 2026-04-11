@@ -14,12 +14,13 @@ class DataStack {
 	toggle = null
 	connections = {
 		send : {
-			host        : '127.0.0.1',
-			port        : 4444,
-			switch      : true,
-			timerActive : true,
-			timerStatus : true,
-			toggle      : true,
+			host : '127.0.0.1',
+			port : 4444,
+
+			active : true,
+			blink  : true,
+			switch : true,
+			toggle : true,
 		},
 		receive : {
 			port : 4488,
@@ -64,6 +65,18 @@ class DataStack {
 	toggleSwitch(index) {
 		const audio = this.toggle.toggle(index)
 		if ( audio !== null ) { this.audioStack.push(audio) }
+	}
+
+	reset_all() {
+		this.timers.reset_all()
+		this.toggle.reset_all()
+	}
+
+	next_timer() {
+		this.timers.next()
+		for ( const reset of this.timers.current.reset_switches ) {
+			this.toggle.force_off(reset)
+		}
 	}
 }
 

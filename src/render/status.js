@@ -17,8 +17,6 @@ const audioSystem = {
 document.addEventListener('DOMContentLoaded', () => {
 	window.ipc.status()
 
-	document.getElementById('click-next-timer').addEventListener('click', () => { window.ipc.nextTimer() })
-
 	audioSystem.chimes = new Audio('sound_clips/chimes.wav')
 	audioSystem.chimes.addEventListener('ended', () => {
 		const thisAudio = new Audio(`sound_clips/${audioSystem.stack.shift()}.wav`)
@@ -61,7 +59,7 @@ const TimerItem = (title, value, extra = null, id = null) => {
 	return [
 		`<div class="d-flex ${extra !== null ? extra : ''}">`,
 		`<div class="fw-bold w-25 text-start ps-2">${title}</div>`,
-		`<div class="flex-grow-1 text-end pe-2" ${id !== null ? `id="${id}"` : ''}>${value}</div>`,
+		`<div class="flex-grow-1 text-end pe-2 font-monospace" ${id !== null ? `id="${id}"` : ''}>${value}</div>`,
 		'</div>'
 	]
 }
@@ -94,11 +92,17 @@ const StatusTimer = (timer) => {
 }
 
 const UpdateTimer = (timer) => {
-	document.getElementById(timer.uuid).innerHTML = timer.formatTime
+	const color   = ColorTimer(timer)
+	const time    = document.getElementById(timer.uuid)
+	const contain = time.closest('.timer-status-card')
+
+	time.innerHTML = timer.formatTime
+	contain.classList.add(color[0])
+	contain.classList.remove(...color[1])
 }
 
 const StatusSwitch = (toggle, index) => {
-	const color = toggle.status === 0 && !toggle.reverseColor ? 'danger-subtle' : 'success-subtle'
+	const color = (toggle.status === 0 && !toggle.reverseColor) || (toggle.status === 1 && toggle.reverseColor) ? 'danger-subtle' : 'success-subtle'
 	return [
 		`<div class="card mb-2 w-100 toggle-status-card bg-${color}" id="${toggle.id}" data-index="${index}">`,
 		`<div class="card-header fw-bold text-center">${toggle.title}</div>`,

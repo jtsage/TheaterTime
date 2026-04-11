@@ -79,6 +79,14 @@ class TimerStack {
 		}
 	}
 
+	reset_all() {
+		if ( !this.#init ) { return }
+		for (const timer of this.#stack) {
+			timer.reset()
+		}
+		this.current_timer = 0
+	}
+
 	next() {
 		if ( !this.#init ) { return }
 		this.#stack[this.current_timer].stop()
@@ -199,7 +207,7 @@ class TimerSTD {
 		}
 	}
 
-	get update() { return { uuid : this.uuid } }
+	get update() { return { uuid : this.uuid, status : this.status } }
 
 	timeAudio(time) {
 		switch ( time ) {
@@ -255,6 +263,7 @@ class TimerUp extends TimerSTD {
 		return {
 			audio        : null,
 			formatTime   : this.formatTime(dir, time, true),
+			wholeSeconds : time,
 			...super.update,
 		}
 	}
@@ -306,6 +315,7 @@ class TimerMinutes extends TimerSTD {
 		return {
 			audio        : this.sound_countdowns ? super.timeAudio(time) : null,
 			formatTime   : this.formatTime(dir, time),
+			wholeSeconds : time,
 			...super.update,
 		}
 	}
@@ -325,6 +335,11 @@ class TimerDown extends TimerSTD {
 		this.sound_countdowns = use_sound
 		this.type             = TimerType.DOWN
 
+		this.start()
+	}
+
+	reset() {
+		super.reset()
 		this.start()
 	}
 
@@ -352,6 +367,7 @@ class TimerDown extends TimerSTD {
 		return {
 			audio        : this.sound_countdowns ? super.timeAudio(time) : null,
 			formatTime   : this.formatTime(dir, time),
+			wholeSeconds : time,
 			...super.update,
 		}
 	}
@@ -370,8 +386,7 @@ const DefaultShow = [
 	{
 		minutes        : null,
 		reset_switches : null,
-		target         : today_time(10, 30),
-		// target         : today_time(19, 30),
+		target         : today_time(19, 30),
 		title          : 'Pre-Show',
 		type           : TimerType.DOWN,
 		use_sound      : true,

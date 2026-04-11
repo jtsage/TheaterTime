@@ -5,10 +5,8 @@
 	(c) 2026 J.T.Sage - MIT License
 */
 const debug = true
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, Menu } = require('electron')
 const path = require('node:path')
-// const Timers = require('lib/timer.js')
-// const Switches = require('lib/switch.js')
 const ThrTime = require('./lib/thrtime.js')
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -18,8 +16,6 @@ let mainWindow = null
 
 const dataStack = new ThrTime.Stack()
 
-
-// Create the browser window.
 const createWindow = () => {
 	mainWindow = new BrowserWindow({
 		height : 800,
@@ -42,9 +38,6 @@ const outputConfig = () => { mainWindow.webContents.send('config', dataStack.con
 const outputStatus = () => { mainWindow.webContents.send('status', dataStack.status) }
 const outputUpdate = () => { mainWindow.webContents.send('update', dataStack.update) }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
 	ipcMain.on('config', outputConfig)
 	ipcMain.on('status', outputStatus)
@@ -73,7 +66,7 @@ app.whenReady().then(() => {
 		outputConfig()
 	})
 	ipcMain.on('timer:next', () => {
-		dataStack.timers.next()
+		dataStack.next_timer()
 		outputStatus()
 	})
 
@@ -98,3 +91,62 @@ app.on('window-all-closed', () => {
 		app.quit()
 	}
 })
+
+
+const isMac = process.platform === 'darwin'
+const template = [
+	// { role: 'appMenu' }
+	...(process.platform === 'darwin'
+		? [{ role : 'appMenu' }]
+		: []),
+	{
+		label   : 'File',
+		submenu : [
+			{
+				label : 'New',
+				submenu : [
+					{ label : 'New Blank Config', click : () => {} },
+					{ label : 'New from Rehearsal Template', click : () => {} },
+					{ label : 'New from Show Template', click : () => {} },
+				],
+			},
+			{ type : 'separator' },
+			{ label : 'Save Configuration', click : () => {} },
+			{ label : 'Load Configuration', click : () => {} },
+			{ type : 'separator' },
+			isMac ? { role : 'close' } : { role : 'quit' }
+		],
+	},
+	{
+		label   : 'Edit',
+		submenu : [
+			{ role : 'undo' },
+			{ role : 'redo' },
+			{ type : 'separator' },
+			{ role : 'cut' },
+			{ role : 'copy' },
+			{ role : 'paste' },
+			{ role : 'delete' },
+		],
+	},
+	{
+		label   : 'Control',
+		submenu : [
+			{ label : 'Next Timer', click : () => {
+				dataStack.next_timer()
+				outputStatus()
+			} },
+			{ type : 'separator' },
+			{ label : 'Reset All', click : () => {
+				dataStack.reset_all()
+				outputStatus()
+			} },
+		],
+	},
+	...(debug
+		? [{ role : 'viewMenu' }]
+		: []),
+]
+
+const menu = Menu.buildFromTemplate(template)
+Menu.setApplicationMenu(menu)

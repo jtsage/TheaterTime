@@ -16,7 +16,7 @@
 		<h1 class="text-end h2 mt-1 me-1 d-none" id="mainHead">TheaterTime</h1>
 		<ul class="nav nav-tabs" id="main-tab" role="tablist">
 			<li class="nav-item" role="presentation">
-				<button class="nav-link active" id="status-tab" data-bs-target="#status-tab-pane" type="button" role="tab" aria-controls="status-tab-pane" aria-selected="true">Status</button>
+				<button class="nav-link" id="status-tab" data-bs-target="#status-tab-pane" type="button" role="tab" aria-controls="status-tab-pane" aria-selected="true">Status</button>
 			</li>
 			<li class="nav-item" role="presentation">
 				<button class="nav-link" id="timer-tab" data-bs-target="#timer-tab-pane" type="button" role="tab" aria-controls="timer-tab-pane" aria-selected="false">Timers</button>
@@ -25,18 +25,15 @@
 				<button class="nav-link" id="toggle-tab" data-bs-target="#toggle-tab-pane" type="button" role="tab" aria-controls="toggle-tab-pane" aria-selected="false">Switches</button>
 			</li>
 			<li class="nav-item" role="presentation">
-				<button class="nav-link" id="config-tab" data-bs-target="#config-tab-pane" type="button" role="tab" aria-controls="config-tab-pane" aria-selected="false">Configuration</button>
+				<button class="nav-link  active" id="config-tab" data-bs-target="#config-tab-pane" type="button" role="tab" aria-controls="config-tab-pane" aria-selected="false">Configuration</button>
 			</li>
 		</ul>
 		<div class="tab-content" id="main-tab-content">
-			<div class="tab-pane fade show active" id="status-tab-pane" role="tabpanel" aria-labelledby="status-tab" tabindex="0">
+			<div class="tab-pane fade" id="status-tab-pane" role="tabpanel" aria-labelledby="status-tab" tabindex="0">
 				<h2 class="text-end h3 otherHead">Timer &amp; Switch Status</h2>
 				<div class="row w-100 m-0">
 					<div class="col-3" id="status-toggle"></div>
-					<div class="col-9">
-						<button type="button" id="click-next-timer" class="btn btn-sm btn-primary w-75 mb-2 mx-auto d-block">Next Timer</button>
-						<div id="status-timer"></div>
-					</div>
+					<div class="col-9" id="status-timer"></div>
 				</div>
 			</div>
 			<div class="tab-pane fade" id="timer-tab-pane" role="tabpanel" aria-labelledby="timer-tab" tabindex="0">
@@ -49,8 +46,69 @@
 				<div id="toggle-config" class="w-100 px-2"></div>
 				<button type="button" id="click-add-switch" class="btn btn-primary w-75 mb-2 mx-auto d-block">Add Switch</button>
 			</div>
-			<div class="tab-pane fade" id="config-tab-pane" role="tabpanel" aria-labelledby="config-tab" tabindex="0">
-				four
+			<div class="tab-pane fade show active" id="config-tab-pane" role="tabpanel" aria-labelledby="config-tab" tabindex="0">
+				<h2 class="text-end h3 otherHead">Communications</h2>
+				<div class="w-100 px-2">
+					<div class="card mb-2">
+						<div class="card-header">Output</div>
+						<div class="card-body">
+							<div class="input-group mb-2">
+								<span class="input-group-text w-25">Output IP</span>
+								<input type="text" class="form-control" name="send-host">
+							</div>
+							<div class="input-group mb-3">
+								<span class="input-group-text w-25">Output Port</span>
+								<input type="number" min="1025" max="65500" step="1" class="form-control" name="send-port">
+							</div>
+							<div class="input-group mb-3">
+								<span class="input-group-text w-75">Switches</span>
+								<input type="checkbox" class="btn-check" id="send-switch">
+								<label class="btn btn-outline-primary w-25 rounded-end" for="send-switch">Enabled</label>
+								<div class="form-text text-end pe-2 mt-0 w-100">Send <code>/theaterTime/switch/## [active or inactive text]</code> style messages</div>
+							</div>
+							<div class="input-group mb-3">
+								<span class="input-group-text w-75">Toggles</span>
+								<input type="checkbox" class="btn-check" id="send-toggle">
+								<label class="btn btn-outline-primary w-25 rounded-end" for="send-toggle">Enabled</label>
+								<div class="form-text text-end pe-2 mt-0 w-100">Send <code>/theaterTime/toggle/## [active or empty text] [inactive or empty text]</code> style messages</div>
+							</div>
+							<div class="input-group mb-3">
+								<span class="input-group-text w-75">Active Timer</span>
+								<input type="checkbox" class="btn-check" id="send-active">
+								<label class="btn btn-outline-primary w-25 rounded-end" for="send-active">Enabled</label>
+								<div class="form-text text-end pe-2 mt-0 w-100">Send <code>/theaterTime/currentTimer [int:time] [string:title] [string:time]</code> style messages</div>
+							</div>
+							<div class="input-group mb-1">
+								<span class="input-group-text w-75">Blink Expired</span>
+								<input type="checkbox" class="btn-check" id="send-blink">
+								<label class="btn btn-outline-primary w-25 rounded-end" for="send-blink">Enabled</label>
+								<div class="form-text text-end pe-2 mt-0 w-100">When current timer is expired, blink text on and off at 0.33Hz</div>
+							</div>
+						</div>
+					</div>
+					<div class="card mb-2">
+						<div class="card-header">Input</div>
+						<div class="card-body">
+							<div class="input-group mb-0">
+								<span class="input-group-text w-25">Listen Port</span>
+								<input type="number" min="1025" max="65500" step="1" class="form-control" name="receive-port">
+							</div>
+							<div class="row mt-2">
+								<div class="col-6">
+								<div class="form-text text-start ps-2 mb-1 mt-0 w-100"><code>/theaterTime/switch/##/on</code> Toggle switch ## on</div>
+								<div class="form-text text-start ps-2 mb-1 mt-0 w-100"><code>/theaterTime/switch/##/off</code> Toggle switch ## off</div>
+								<div class="form-text text-start ps-2 mb-1 mt-0 w-100"><code>/theaterTime/switch/##/toggle</code> Toggle switch ##</div>
+								</div><div class="col-6">
+								<div class="form-text text-start ps-2 mb-1 mt-0 w-100"><code>/theaterTime/timer/next</code> End current timer, start next</div>
+								<div class="form-text text-start ps-2 mb-1 mt-0 w-100"><code>/theaterTime/timer/previous</code> End current timer, start previous</div>
+								<div class="form-text text-start ps-2 mb-1 mt-0 w-100"><code>/theaterTime/timer/stop</code> Stop all timers</div>
+								<div class="form-text text-start ps-2 mb-1 mt-0 w-100"><code>/theaterTime/timer/reset</code> Reset all timers to configured state</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<button type="button" id="click-save-config" class="btn btn-primary w-75 mb-2 mx-auto d-block">Save Config &amp; Restart OSC</button>
+				</div>
 			</div>
 		</div>
 

@@ -56,6 +56,7 @@ window.ipc.receive('config', (data) => {
 	// eslint-disable-next-line no-console
 	console.log(data)
 
+	updateConfig(data.connections)
 	winStatus.dirty = false
 	winStatus.timerCount = data.timers.length
 	winStatus.switchList.length = 0
@@ -193,8 +194,6 @@ const timer_details = () => {
 		}
 	}
 }
-
-
 
 const timer_date_time = (date) => {
 	const dateObj = date !== null ? new Date(date) : new Date()
@@ -336,6 +335,17 @@ const HTMLSelectResets = (selected) => {
 		}),
 		'</div></div>'
 	]
+}
+
+const updateConfig = (config) => {
+	const pane = document.getElementById('config-tab-pane')
+	pane.querySelector('[name="send-host"]').value = config.send.host
+	pane.querySelector('[name="send-port"]').value = config.send.port
+	document.getElementById('send-switch').checked = config.send.switch
+	document.getElementById('send-toggle').checked = config.send.toggle
+	document.getElementById('send-active').checked = config.send.active
+	document.getElementById('send-blink').checked  = config.send.blink
+	pane.querySelector('[name="receive-port"]').value = config.receive.port
 }
 
 

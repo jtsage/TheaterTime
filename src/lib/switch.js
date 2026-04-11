@@ -111,7 +111,7 @@ class SwitchStack {
 		this.#stack.length = 0
 	}
 
-	reset() {
+	reset_all() {
 		for (const toggle of this.#stack) {
 			if (toggle.isOn) { toggle.off() }
 		}
@@ -119,20 +119,30 @@ class SwitchStack {
 
 	on(index) {
 		this.#stack[index].on()
+		for ( const reset of this.#stack[index].reset_switches ) {
+			this.force_off(reset)
+		}
+		return this.#stack[index].audioFile
 	}
 
 	off(index) {
 		this.#stack[index].off()
+		return null
+	}
+
+	force_off(id) {
+		for ( const toggle of this.#stack ) {
+			if ( toggle.id === id ) {
+				toggle.off()
+			}
+		}
 	}
 
 	toggle(index) {
 		if ( this.#stack[index].isOn ) {
-			this.#stack[index].off()
-			return null
+			return this.off(index)
 		}
-		
-		this.#stack[index].on()
-		return this.#stack[index].audioFile
+		return this.on(index)
 	}
 
 	get all() {
