@@ -7,9 +7,17 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 	window.ipc.config()
+
+	document.getElementById('main-tab').addEventListener('hide.bs.tab', (e) => {
+		// reload data on tab change
+		return false
+		// window.ipc.config()
+	})
 })
 
 const switchList = []
+let timerCount = 0
+let dirtyDetails = true
 
 // const TimerStatus = Object.freeze({
 // 	0 : 'Pending',
@@ -31,6 +39,8 @@ const TimerType = Object.freeze({
 
 window.ipc.receive('config', (data) => {
 	console.log(data)
+
+	timerCount = data.timers.length
 	switchList.length = 0
 	for ( const toggle of data.toggle ) {
 		switchList.push([toggle.id, toggle.title])
@@ -41,85 +51,126 @@ window.ipc.receive('config', (data) => {
 
 	const timerConfig = document.getElementById('timer-config')
 	timerConfig.innerHTML = data.timers.map((timer, index) => TimerConfigHTML(timer, index)).join('\n')
+	timer_details()
 
-	for (const element of switchConfig.getElementsByTagName('select')) {
-		element.addEventListener('change', (e) => switch_change(e))
-	}
-	for (const element of switchConfig.getElementsByTagName('input')) {
-		element.addEventListener('change', (e) => switch_change(e))
-	}
-	for (const element of switchConfig.querySelectorAll('.save-switch')) {
-		element.addEventListener('click', () => switch_save())
-	}
-	for (const element of switchConfig.querySelectorAll('.reload-switch')) {
-		element.addEventListener('click', () => { window.ipc.config() })
-	}
-	for (const element of switchConfig.querySelectorAll('.remove-switch')) {
-		element.addEventListener('click', (e) => switch_delete(e))
+	for (const element of document.querySelectorAll('#timer-config select, #timer-config input, #toggle-config input')) {
+		element.addEventListener('change', (e) => mark_item(e))
 	}
 
-	for (const element of timerConfig.getElementsByTagName('select')) {
-		element.addEventListener('change', (e) => timer_change(e))
-	}
-	for (const element of timerConfig.getElementsByTagName('input')) {
-		element.addEventListener('change', (e) => timer_change(e))
-	}
-	for (const element of switchConfig.querySelectorAll('.save-timer')) {
-		element.addEventListener('click', () => timer_save())
-	}
-	for (const element of switchConfig.querySelectorAll('.reload-timer')) {
-		element.addEventListener('click', () => { window.ipc.config() })
-	}
-	for (const element of switchConfig.querySelectorAll('.remove-timer')) {
-		element.addEventListener('click', (e) => timer_delete(e))
+	for (const element of document.querySelectorAll('.action-btn')) {
+		switch (element.getAttribute('data-action')) {
+			case 'reload' :
+				element.addEventListener('click', () => { window.ipc.config() })
+				break
+			case 'remove-timer' :
+				element.addEventListener('click', (e) => remove_item(e, 'timer'))
+				break
+			case 'remove-switch' :
+				element.addEventListener('click', (e) => remove_item(e, 'switch'))
+				break
+			case 'save-timer' :
+				element.addEventListener('click', () => save_item(true))
+				break
+			case 'save-switch' :
+				element.addEventListener('click', () => save_item(false))
+				break
+			default :
+				break
+		}
 	}
 })
 
-const switch_save = () => {
-	const toggles = document.getElementById('toggle-config')
-	const saveData = []
-	for (const form of toggles.getElementsByTagName('form')) {
+
+const save_item = (timers = true) => {
+	const container = document.getElementById(timers ? 'timer-config' : 'toggle-config')
+	const saveData  = []
+
+	for (const form of container.getElementsByTagName('form')) {
 		const formData = new FormData(form)
 		const jsonData = { reset_switches : [] }
+
 		for (const pair of formData.entries()) {
 			if ( pair[0].substring(0, 16) === 'reset_switches--') {
 				jsonData.reset_switches.push(pair[1])
-			} else if ( pair[0] === 'reverseColor' ) {
-				jsonData.reverseColor = pair[1] === 'true'
+			} else if ( pair[0] === 'type' ) {
+				jsonData.type = parseInt(pair[1], 10)
+			} else if ( pair[1] === 'true' || pair[1] === 'false') {
+				jsonData[pair[0]] = pair[1] === 'true'
 			} else {
 				jsonData[pair[0]] = pair[1]
+			}
+			switch (jsonData?.type) {
+				case 1 :
+					jsonData.targetMinutes = null
+					jsonData.targetDateTime = null
+					break
+				case 2 :
+					jsonData.targetMinutes = null
+					break
+				case 3 :
+					jsonData.targetDateTime = null
+					jsonData.targetMinutes = parseInt(jsonData.targetMinutes, 10)
+					break
+				default :
+					break
 			}
 		}
 		saveData.push(jsonData)
 	}
-	window.ipc.saveSwitch(saveData)
+
+	if ( timers ) {
+		window.ipc.saveTimer(saveData)
+	} else {
+		window.ipc.saveSwitch(saveData)
+	}
 }
 
-const switch_delete = (e) => {
+const remove_item = (e, type = 'switch') => {
 	const button = e.target.tagName === 'button' ? e.target : e.target.closest('button')
 	const index  = button.getAttribute('data-index')
 	if ( index !== null ) {
-		window.ipc.removeSwitch(button.getAttribute('data-index'))
+		switch ( type ) {
+			case 'switch' :
+				window.ipc.removeSwitch(index)
+				break
+			case 'timer' :
+				window.ipc.removeTimer(index)
+				break
+			default : break
+		}
+		
 	}
 }
 
-const switch_change = (e) => {
+const mark_item = (e) => {
 	const card = e.target.closest('div.card')
 	card.classList.add('bg-primary-subtle')
 
-	const toggles = document.getElementById('toggle-config')
-	for (const element of toggles.querySelectorAll('.save-switch, .reload-switch')) {
+	const container = card.parentElement
+	for (const element of container.querySelectorAll('.action-btn[data-action="reload"], .action-btn[data-action="save-*"]')) {
+		console.log(element)
 		element.classList.remove('d-none')
 	}
 }
 
-const timer_change = (e) => {
-	const card = e.target.closest('div.card')
-	card.classList.add('bg-primary-subtle')
-
-	const toggles = document.getElementById('timer-config')
-	for (const element of toggles.querySelectorAll('.save-timer, .reload-timer')) {
-		element.classList.remove('d-none')
+const timer_details = () => {
+	for (const card of document.querySelectorAll('#timer-config>.card')) {
+		switch (card.querySelector('select[name="type"]').value) {
+			case '1' :
+				card.querySelector('input[name="targetMinutes"]').parentElement.classList.add('d-none')
+				card.querySelector('input[name="targetDateTime"]').parentElement.classList.add('d-none')
+				break
+			case '2' :
+				card.querySelector('input[name="targetMinutes"]').parentElement.classList.add('d-none')
+				card.querySelector('input[name="targetDateTime"]').parentElement.classList.remove('d-none')
+				break
+			case '3' :
+				card.querySelector('input[name="targetMinutes"]').parentElement.classList.remove('d-none')
+				card.querySelector('input[name="targetDateTime"]').parentElement.classList.add('d-none')
+				break
+			default :
+				break
+		}
 	}
 }
 
@@ -205,9 +256,9 @@ const SwitchConfigHTML = (toggle, index, create = false) => {
 
 const HTMLButtons = (type, index, create = false, no_delete_first = true) => {
 	return [
-		`<button title="Save ALL Changes" class="btn btn-sm btn-success save-${type} ${!create ? 'd-none':''}" type="button"><i class="bi bi-floppy2"></i></button>`,
-		`<button title="Discard ALL Changes" class="btn btn-sm btn-primary reload-${type} ${!create ? 'd-none':''}" type="button"><i class="bi bi-arrow-clockwise"></i></button>`,
-		`<button title="Remove Item" data-index="${index}" class="btn btn-sm btn-danger remove-${type} ${create || (index === 0 && no_delete_first) ? 'd-none':''}" type="button"><i class="bi bi-trash3-fill"></i></button>`,
+		`<button data-action="save-${type}" title="Save ALL Changes" class="btn btn-sm btn-success action-btn ${!create ? 'd-none':''}" type="button"><i class="bi bi-floppy2"></i></button>`,
+		`<button data-action="reload" title="Discard ALL Changes" class="btn btn-sm btn-primary action-btn ${!create ? 'd-none':''}" type="button"><i class="bi bi-arrow-clockwise"></i></button>`,
+		`<button data-action="remove-${type}" title="Remove Item" data-index="${index}" class="btn btn-sm btn-danger action-btn ${create || (index === 0 && no_delete_first) ? 'd-none':''}" type="button"><i class="bi bi-trash3-fill"></i></button>`,
 	]
 }
 
@@ -278,8 +329,8 @@ function clientAddSwitch() {
 		textInactive   : 'OFF',
 		title          : '',
 	}, switchList.length, true)
-	thisSwitch.querySelector('.save-switch').addEventListener('click', () => switch_save())
-	thisSwitch.querySelector('.reload-switch').addEventListener('click', () => { window.ipc.config() })
+	thisSwitch.querySelector('.action-btn[data-action="save-switch"]').addEventListener('click', () => save_item(false))
+	thisSwitch.querySelector('.action-btn[data-action="reload"]').addEventListener('click', () => { window.ipc.config() })
 	
 	document.getElementById('toggle-config').append(thisSwitch)
 }

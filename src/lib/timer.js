@@ -37,6 +37,10 @@ class TimerStack {
 		return this.#stack.length
 	}
 
+	remove(index) {
+		this.#stack.splice(index, 1)
+	}
+
 	add({
 		title          = null,
 		reset_switches = null,
@@ -261,7 +265,11 @@ class TimerMinutes extends TimerSTD {
 class TimerDown extends TimerSTD {
 	constructor(title, target, use_sound = false, reset_switches = null) {
 		super(title, reset_switches)
-		this.targetDateTime   = target
+		if ( target instanceof Date ) {
+			this.targetDateTime   = target
+		} else {
+			this.targetDateTime   = new Date(target)
+		}
 		this.sound_countdowns = use_sound
 		this.type             = TimerType.DOWN
 

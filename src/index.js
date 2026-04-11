@@ -4,6 +4,7 @@
     |_| |_|_|\___.<___| |_| \___.|_|  |_| |_||_|_|_|\___.
 	(c) 2026 J.T.Sage - MIT License
 */
+const debug = true
 const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('node:path')
 // const Timers = require('lib/timer.js')
@@ -31,6 +32,10 @@ const createWindow = () => {
 	})
 
 	mainWindow.loadFile(path.join(__dirname, 'render', 'index.html'))
+
+	if ( debug ) {
+		mainWindow.webContents.openDevTools({ mode : 'detach' })
+	}
 }
 
 const outputConfig = () => { mainWindow.webContents.send('config', dataStack.config) }
@@ -48,6 +53,16 @@ app.whenReady().then(() => {
 	})
 	ipcMain.on('switch:remove', (_, index) => {
 		dataStack.toggle.remove(index)
+		outputConfig()
+	})
+
+	ipcMain.on('timer:save', (_, data) => {
+		dataStack.timers.clear()
+		dataStack.timers.add_stack(data)
+		outputConfig()
+	})
+	ipcMain.on('timer:remove', (_, index) => {
+		dataStack.timers.remove(index)
 		outputConfig()
 	})
 
