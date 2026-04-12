@@ -12,16 +12,29 @@ const audioSystem = {
 	blocked : false,
 	chimes  : null,
 	stack   : [],
+	synth   : window.speechSynthesis,
+	utter   : new SpeechSynthesisUtterance(),
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+	audioSystem.utter.rate = 1.2
+	audioSystem.utter.pitch = 1.2
+	audioSystem.utter.onend = () => { audioSystem.blocked = false }
+
+	for ( const voice of audioSystem.synth.getVoices() ) {
+		if ( voice.name.startsWith('Microsoft Mark') ) {
+			audioSystem.utter.voice = voice
+			audioSystem.utter.rate  = 0.8
+			audioSystem.utter.pitch = 0.8
+		}
+	}
+
 	window.ipc.status()
 
-	audioSystem.chimes = new Audio('sound_clips/chimes.wav')
+	audioSystem.chimes = new Audio('inc/chimes.wav')
 	audioSystem.chimes.addEventListener('ended', () => {
-		const thisAudio = new Audio(`sound_clips/${audioSystem.stack.shift()}.wav`)
-		thisAudio.addEventListener('ended', () => { audioSystem.blocked = false })
-		thisAudio.play()
+		audioSystem.utter.text = audioSystem.stack.shift()
+		audioSystem.synth.speak(audioSystem.utter)
 	})
 
 	setInterval(() => {
@@ -33,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 })
 
 window.ipc.receive('update', (data) => {
-	if ( data.playAudio ) { audioSystem.stack.push(data.playAudio) }
+	if ( data.spoken ) { audioSystem.stack.push(data.spoken) }
 
 	if ( !isInit ) { return }
 	for ( const timer of data.timers ) {

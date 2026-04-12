@@ -71,7 +71,7 @@ window.ipc.receive('config', (data) => {
 	timerConfig.innerHTML = data.timers.map((timer, index) => TimerConfigHTML(timer, index)).join('\n')
 	timer_details()
 
-	for (const element of document.querySelectorAll('#timer-config select, #timer-config input, #toggle-config input')) {
+	for (const element of document.querySelectorAll('#timer-config select, #timer-config input, #toggle-config input, #toggle-config select')) {
 		element.addEventListener('change', (e) => {
 			timer_details()
 			mark_item(e)
@@ -253,7 +253,7 @@ const SwitchConfigHTML = (toggle, index, create = false) => {
 		...HTMLFormText( 'title', toggle.title, 'Title'),
 		...HTMLFormText( 'textActive', toggle.textActive, 'Active Text'),
 		...HTMLFormText( 'textInactive', toggle.textInactive, 'Inactive Text'),
-		...HTMLFormText( 'audioFile', toggle.audioFile, 'Audio File', 'Audio to play when toggled active'),
+		...HTMLFormText( 'speak', toggle.speak, 'Speak'),
 
 		...HTMLToggleButton(
 			'reverseColor',
@@ -353,9 +353,9 @@ function clientAddSwitch() {
 	document.getElementById('click-add-switch').classList.add('d-none')
 	const thisSwitch = document.createElement('div')
 	thisSwitch.innerHTML = SwitchConfigHTML({
-		audioFile      : '',
 		reset_switches : null,
 		reverseColor   : false,
+		speak          : '',
 		textActive     : 'ON',
 		textInactive   : 'OFF',
 		title          : '',

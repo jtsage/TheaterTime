@@ -12,10 +12,10 @@ const SwitchStatus = Object.freeze({
 
 //MARK: Switch Class
 class Switch {
-	audioFile      = null
 	id             = null
 	reset_switches = []
 	reverseColor   = false
+	speak          = null
 	status         = SwitchStatus.INACTIVE
 	textActive     = ''
 	textInactive   = ''
@@ -23,15 +23,15 @@ class Switch {
 
 	constructor({
 		title,
-		audioFile      = null,
 		reset_switches = null,
 		reverseColor   = false,
+		speak          = null,
 		textActive     = 'ON',
 		textInactive   = 'OFF',
 	} = {}) {
 		this.id             = `switch-${title.toLowerCase().replace(/[^\dA-Za-z]/, '-')}`
 
-		this.audioFile      = audioFile
+		this.speak          = speak
 		this.title          = title
 		this.textActive     = textActive
 		this.textInactive   = textInactive
@@ -39,17 +39,17 @@ class Switch {
 		this.reset_switches = Array.isArray(reset_switches) ? reset_switches : []
 	}
 
-	on() { this.status = SwitchStatus.ACTIVE }
+	on()  { this.status = SwitchStatus.ACTIVE }
 	off() { this.status = SwitchStatus.INACTIVE }
 
 	get isOn() { return this.status === SwitchStatus.ACTIVE }
 
 	get serialize() {
 		return {
-			audioFile      : this.audioFile,
 			id             : this.id,
 			reset_switches : this.reset_switches,
 			reverseColor   : this.reverseColor,
+			speak          : this.speak,
 			status         : this.status,
 			textActive     : this.textActive,
 			textInactive   : this.textInactive,
@@ -59,10 +59,10 @@ class Switch {
 
 	get config() {
 		return {
-			audioFile      : this.audioFile,
 			id             : this.id,
 			reset_switches : this.reset_switches,
 			reverseColor   : this.reverseColor,
+			speak          : this.speak,
 			textActive     : this.textActive,
 			textInactive   : this.textInactive,
 			title          : this.title,
@@ -90,16 +90,16 @@ class SwitchStack {
 
 	add({
 		title,
-		audioFile      = null,
+		speak          = null,
 		reset_switches = null,
 		reverseColor   = false,
 		textActive     = 'ON',
 		textInactive   = 'OFF',
 	} = {}) {
 		this.#stack.push(new Switch({
-			audioFile      : audioFile,
 			reset_switches : reset_switches,
 			reverseColor   : reverseColor,
+			speak          : speak,
 			textActive     : textActive,
 			textInactive   : textInactive,
 			title          : title,
@@ -122,7 +122,7 @@ class SwitchStack {
 		for ( const reset of this.#stack[index].reset_switches ) {
 			this.force_off(reset)
 		}
-		return this.#stack[index].audioFile
+		return this.#stack[index].speak
 	}
 
 	off(index) {
@@ -154,39 +154,66 @@ class SwitchStack {
 	}
 }
 
-const SwitchDefault = [
+const DefaultShow = [
 	{
-		audioFile      : 'mics',
 		reset_switches : null,
 		reverseColor   : false,
+		speak          : 'Microphones are now ready.',
 		textActive     : 'Microphones ARE Ready',
 		textInactive   : 'Microphones are NOT Ready',
 		title          : 'Microphones',
 	},
 	{
-		audioFile      : 'house',
 		reset_switches : null,
 		reverseColor   : false,
+		speak          : 'The House is now open.',
 		textActive     : 'House is OPEN',
 		textInactive   : 'House is NOT Open',
 		title          : 'House',
 	},
 	{
-		audioFile      : 'places',
 		reset_switches : ['switch-house-hold'],
 		reverseColor   : false,
+		speak          : 'Places please.  Places.  Thank You.',
 		textActive     : 'Places HAS been called',
 		textInactive   : 'Places has NOT been called',
 		title          : 'Places',
 	},
 	{
-		audioFile      : 'hold',
 		reset_switches : null,
 		reverseColor   : true,
+		speak          : 'A house hold is required.  Please stand by.',
 		textActive     : 'House Hold is REQUIRED',
 		textInactive   : 'House Hold is NOT Needed',
 		title          : 'House Hold',
 	}
+]
+
+const DefaultRehearsal = [
+	{
+		reset_switches : null,
+		reverseColor   : false,
+		speak          : 'Microphones are now ready.',
+		textActive     : 'Microphones ARE Ready',
+		textInactive   : 'Microphones are NOT Ready',
+		title          : 'Microphones',
+	},
+	{
+		reset_switches : null,
+		reverseColor   : false,
+		speak          : 'Costumes are now ready.',
+		textActive     : 'Costumes ARE Ready',
+		textInactive   : 'Costumes are NOT Ready',
+		title          : 'Costumes',
+	},
+	{
+		reset_switches : null,
+		reverseColor   : false,
+		speak          : 'Wigs and Makeup are now ready.',
+		textActive     : 'Wigs &amp; Makeup ARE Ready',
+		textInactive   : 'Wigs &amp; Makeup are NOT Ready',
+		title          : 'Wigs &amp; Makeup',
+	},
 ]
 
 
@@ -194,5 +221,6 @@ module.exports = {
 	Stack  : SwitchStack,
 	Status : SwitchStatus,
 
-	Default : SwitchDefault,
+	Default : DefaultShow,
+	Rehearsal : DefaultRehearsal,
 }

@@ -211,11 +211,11 @@ class TimerSTD {
 
 	timeAudio(time) {
 		switch ( time ) {
-			case 1800 : return '30min'
-			case 1200 : return '20min'
-			case 900  : return '15min'
-			case 600  : return '10min'
-			case 300  : return '5min'
+			case 1800 : return 'Thirty Minutes Please.  Thirty Minutes.'
+			case 1200 : return 'Twenty Minutes Please.  Twenty Minutes.'
+			case 900  : return 'Fifteen Minutes Please.  Fifteen Minutes.'
+			case 600  : return 'Ten Minutes Please.  Ten Minutes.'
+			case 300  : return 'Five Minutes Please.  Five Minutes.'
 			default   : return null
 		}
 	}
@@ -261,8 +261,8 @@ class TimerUp extends TimerSTD {
 		const time = this.time
 		const dir = this.status === TimerStatus.RUNNING ? '↑ ' : ''
 		return {
-			audio        : null,
 			formatTime   : this.formatTime(dir, time, true),
+			speak        : null,
 			wholeSeconds : time,
 			...super.update,
 		}
@@ -313,8 +313,8 @@ class TimerMinutes extends TimerSTD {
 		const time = this.time
 		const dir = this.status === TimerStatus.RUNNING ? '↓ ' : ''
 		return {
-			audio        : this.sound_countdowns ? super.timeAudio(time) : null,
 			formatTime   : this.formatTime(dir, time),
+			speak        : this.sound_countdowns ? super.timeAudio(time) : null,
 			wholeSeconds : time,
 			...super.update,
 		}
@@ -365,10 +365,10 @@ class TimerDown extends TimerSTD {
 		const time = this.time
 		const dir = this.status === TimerStatus.RUNNING ? '↓ ' : ''
 		return {
-			audio        : this.sound_countdowns ? super.timeAudio(time) : null,
-			formatTime   : this.formatTime(dir, time),
-			wholeSeconds : time,
 			...super.update,
+			formatTime   : this.formatTime(dir, time),
+			speak        : this.sound_countdowns ? super.timeAudio(time) : null,
+			wholeSeconds : time,
 		}
 	}
 }
@@ -382,11 +382,20 @@ const today_time = (hour, minute) => {
 	return now
 }
 
+const debug_time = () => {
+	const now = new Date()
+	now.setSeconds(0)
+	now.setMilliseconds(0)
+	now.setMinutes(now.getMinutes() + 21)
+	return now
+}
+
 const DefaultShow = [
 	{
 		minutes        : null,
 		reset_switches : null,
-		target         : today_time(19, 30),
+		target         : debug_time(),
+		// target         : today_time(19, 30),
 		title          : 'Pre-Show',
 		type           : TimerType.DOWN,
 		use_sound      : true,

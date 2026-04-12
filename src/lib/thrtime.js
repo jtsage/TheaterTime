@@ -9,9 +9,9 @@ const Timers   = require('./timer.js')
 const Switches = require('./switch.js')
 
 class DataStack {
-	audioStack = []
-	timers = null
-	toggle = null
+	speakStack  = []
+	timers      = null
+	toggle      = null
 	connections = {
 		send : {
 			host : '127.0.0.1',
@@ -53,18 +53,19 @@ class DataStack {
 
 	get update() {
 		const timers = this.timers.update
+		console.log(timers)
 		for ( const timer of timers ) {
-			if ( timer.audio !== null ) { this.audioStack.push(timer.audio) }
+			if ( timer.speak !== null ) { this.speakStack.push(timer.speak) }
 		}
 		return {
 			timers : timers,
-			playAudio : this.audioStack.shift(),
+			spoken : this.speakStack.shift(),
 		}
 	}
 
 	toggleSwitch(index) {
-		const audio = this.toggle.toggle(index)
-		if ( audio !== null ) { this.audioStack.push(audio) }
+		const speak = this.toggle.toggle(index)
+		if ( speak !== null && speak !== '' ) { this.speakStack.push(speak) }
 	}
 
 	reset_all() {
