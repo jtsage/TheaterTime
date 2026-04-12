@@ -27,6 +27,8 @@ Switches are ON/OFF Data points. You can activate of deactivate them manually, a
 - __Speak__ : A text string that will be machine-spoken when the switch is toggled active
 - __Reset Switch(es)__ : These are the switches that will be set to inactive when this switch is set active
 
+![Switch Settings](s_shot/set-switch.png)
+
 ## Timers
 
 Timers keep time.  They can track time _until_ an event, or time _elapsed_ in an event.  You can only have 1 timer active at a time, but there are provisions for running inactive timers, depending on type.
@@ -42,9 +44,13 @@ Additional options are available on some timers
 - __Minutes__ : The number of minutes to count (plus 2 seconds, so audio plays correctly). This settings is only available on minute count-down type timers.
 - __Target__ : The target DateTime to count-down to.  This setting is only available on count-down type timers.
 
+![Timer Settings](s_shot/set-timer.png)
+
 ## OSC Input
 
 The recommended method of interacting with TheaterTime is to use OSC messages.
+
+![General Settings](s_shot/set-general.png)
 
 ### Switch OSC
 
