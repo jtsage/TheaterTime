@@ -105,6 +105,7 @@ const StatusTimer = (timer) => {
 	return [
 		`<div class="card mb-2 w-100 timer-status-card ${ColorTimer(timer)[0]}">`,
 		`<div class="card-header fw-bold text-center">${timer.title}</div>`,
+		timer.sound_countdowns ? '<div class="text-body-tertiary text-end pe-2 audio-icon"><i class="bi bi-volume-up"></i></div>' : '',
 		'<div class="card-body text-center p-1">',
 		...TimerItem(timer.type !== 1 ? 'Remaining' : 'Elapsed', timer.formatTime, 'lead', timer.uuid),
 		...(timer.type !== 2 && timer.dateStarted !== null) ? TimerItem('Started', new Date(timer.dateStarted).toLocaleString()) : [],

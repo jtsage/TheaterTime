@@ -67,10 +67,8 @@ class DataStack {
 
 	set config(newConfig) {
 		this.settings = newConfig.settings
-
 		this.timers.clear()
 		this.timers.add_stack(newConfig.timers)
-
 		this.toggle.clear()
 		this.toggle.add_stack(newConfig.toggle)
 	}
@@ -78,8 +76,8 @@ class DataStack {
 	get status() {
 		return {
 			current_timer : this.timers.current_timer,
-			timers : this.timers.all,
-			toggle : this.toggle.all,
+			timers        : this.timers.all,
+			toggle        : this.toggle.all,
 		}
 	}
 
@@ -94,7 +92,26 @@ class DataStack {
 		}
 	}
 
+	oscToggleSwitch(number) {
+		if ( typeof number !== 'number' || !Number.isInteger(number) ) { return }
+		const speak = this.toggle.toggle(number - 1)
+		if ( speak !== null && speak !== '' ) { this.speakStack.push(speak) }
+	}
+
+	oscOffSwitch(number) {
+		if ( typeof number !== 'number' || !Number.isInteger(number) ) { return }
+		const speak = this.toggle.off(number - 1)
+		if ( speak !== null && speak !== '' ) { this.speakStack.push(speak) }
+	}
+
+	oscOnSwitch(number) {
+		if ( typeof number !== 'number' || !Number.isInteger(number) ) { return }
+		const speak = this.toggle.on(number - 1)
+		if ( speak !== null && speak !== '' ) { this.speakStack.push(speak) }
+	}
+
 	toggleSwitch(index) {
+		if ( isNaN(index) ) { return }
 		const speak = this.toggle.toggle(index)
 		if ( speak !== null && speak !== '' ) { this.speakStack.push(speak) }
 	}

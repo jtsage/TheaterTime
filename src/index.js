@@ -65,6 +65,7 @@ const configChange = () => { outputConfig(); outputStatus() }
 app.whenReady().then(() => {
 	ipcMain.on('config', outputConfig)
 	ipcMain.on('status', outputStatus)
+	ipcMain.on('log',    outputLogger)
 
 	ipcMain.on('switch:save', (_, data) => {
 		dataStack.toggle.clear()
@@ -126,7 +127,7 @@ app.on('window-all-closed', () => {
 	}
 })
 
-
+// MARK: Main Menu
 const isMac = process.platform === 'darwin'
 const template = [
 	// { role: 'appMenu' }
@@ -145,7 +146,7 @@ const template = [
 				],
 			},
 			{ type : 'separator' },
-			{ label : 'Save Configuration', click : () => {
+			{ accelerator : 'CommandOrControl+S', label : 'Save Configuration', click : () => {
 				dialog.showSaveDialog(mainWindow, {
 					defaultPath : app.getPath('desktop'),
 					filters     : [{ name : 'ThrTime Files', extensions : ['ttime'] }],
@@ -163,7 +164,7 @@ const template = [
 					dataStack.log.push(err)
 				})
 			} },
-			{ label : 'Load Configuration', click : () => {
+			{ accelerator : 'CommandOrControl+O', label : 'Load Configuration', click : () => {
 				const options = {
 					properties  : ['openFile'],
 					defaultPath : app.getPath('desktop'),
@@ -204,8 +205,12 @@ const template = [
 	{
 		label   : 'Control',
 		submenu : [
-			{ label : 'Next Timer', click : () => {
+			{ accelerator : 'CommandOrControl+N', label : 'Next Timer', click : () => {
 				dataStack.next_timer()
+				outputStatus()
+			} },
+			{ accelerator : 'CommandOrControl+Shift+N', label : 'Previous Timer', click : () => {
+				dataStack.timers.previous()
 				outputStatus()
 			} },
 			{ type : 'separator' },
@@ -215,40 +220,91 @@ const template = [
 			} },
 		],
 	},
-	...(debug
-		? [{ role : 'viewMenu' }]
-		: []),
+	 {
+		label   : 'View',
+		submenu : [
+			{ accelerator : 'CommandOrControl+1', label : 'Status', click : () => {
+				mainWindow.webContents.send('view', 'status-tab')
+			} },
+			{ accelerator : 'CommandOrControl+2', label : 'Timer Settings', click : () => {
+				mainWindow.webContents.send('view', 'timer-tab')
+			} },
+			{ accelerator : 'CommandOrControl+3', label : 'Switch Settings', click : () => {
+				mainWindow.webContents.send('view', 'toggle-tab')
+			} },
+			{ accelerator : 'CommandOrControl+4', label : 'General Settings', click : () => {
+				mainWindow.webContents.send('view', 'config-tab')
+			} },
+			{ type : 'separator' },
+			{ accelerator : 'CommandOrControl+L', label : 'Log', click : () => {
+				mainWindow.webContents.send('view', 'log-tab')
+			} },
+			{ accelerator : 'CommandOrControl+H', label : 'Help', click : () => {
+				mainWindow.webContents.send('view', 'help-tab')
+			} },
+			...(debug ? [
+				{ type : 'separator' },
+				{ role : 'reload' },
+				{ role : 'forceReload' },
+				{ role : 'toggleDevTools' },
+			] : [] )
+		],
+	},
 ]
 
 const menu = Menu.buildFromTemplate(template)
 Menu.setApplicationMenu(menu)
 
-
+// MARK: OSC (recv)
+function oscPrint(oscPacket) {
+	return `${oscPacket.address} ${oscPacket.args.map((v) => ['[', v.type.substring(0, 1), ':', v.value, ']'].join('')).join(' ')}`
+}
 function doOSC(packet) {
 	try {
-		const oscPacket    = oscLib.readPacket(packet)
-		const addressParts = oscPacket.address.replace('/', '').split('/')
+		const oscPacket = oscLib.readPacket(packet)
+		let   update    = true
 
-		if ( addressParts[0] !== 'theaterTime' ) { return }
+		if ( !oscPacket.address.startsWith('/theaterTime') ) { return }
 
-		dataStack.log.push(`Acting on OSC : ${addressParts.join('/')}\n`)
+		dataStack.log.push(`Acting on OSC : ${oscPrint(oscPacket)}\n`)
 
-		if ( addressParts[1] === 'switch' ) {
-			const index = parseInt(addressParts[2], 10) - 1
-			if      ( addressParts[3] === 'on' )     { dataStack.timers.on(index) }
-			else if ( addressParts[3] === 'off' )    { dataStack.timers.off(index) }
-			else if ( addressParts[3] === 'toggle' ) { dataStack.toggleSwitch(index) }
-		} else if ( addressParts[1] === 'timer' ) {
-			if      ( addressParts[2] === 'next' )     { dataStack.next_timer() }
-			else if ( addressParts[2] === 'previous' ) { dataStack.timers.previous() }
-			else if ( addressParts[2] === 'stop' )     { dataStack.timers.stop_all() }
-			else if ( addressParts[2] === 'reset' )    { dataStack.reset_all() }
-			oscToggle()
-		} else if ( addressParts[1] === 'speak' ) {
-			const speak = oscPacket.args[0]?.value || null
-			if ( speak !== null && speak !== '' ) { dataStack.speakStack.push(speak) }
+		switch (oscPacket.address ) {
+			case '/theaterTime/switch/on' :
+				dataStack.oscOnSwitch(oscPacket.args[0]?.value)
+				break
+			case '/theaterTime/switch/off' :
+				dataStack.oscOffSwitch(oscPacket.args[0]?.value)
+				break
+			case '/theaterTime/switch/toggle' :
+				dataStack.oscToggleSwitch(oscPacket.args[0]?.value)
+				break
+			case '/theaterTime/timer/next' :
+				dataStack.next_timer()
+				break
+			case '/theaterTime/timer/previous' :
+				dataStack.timers.previous()
+				break
+			case '/theaterTime/timer/stop' :
+				dataStack.timers.stop_all()
+				break
+			case '/theaterTime/reset' :
+				dataStack.reset_all()
+				break
+			case '/theaterTime/speak' : {
+				const speak = oscPacket.args[0]?.value || null
+				if ( speak !== null && speak !== '' ) { dataStack.speakStack.push(speak) }
+				break
+			}
+			default :
+				update = false
+				dataStack.log.push(`UNMATCHED : ${oscPrint(oscPacket)}\n`)
 		}
-		outputStatus()
+	
+		if ( update ) {
+			outputStatus()
+			oscActiveTimer()
+			oscToggle()
+		}
 	} catch (err) {
 		dataStack.log.push(`OSC packet problem : ${err}\n`)
 	}

@@ -8,22 +8,19 @@
 
 const {contextBridge, ipcRenderer } = require('electron')
 
-
 contextBridge.exposeInMainWorld(
 	'ipc', {
 		config : () => ipcRenderer.send('config'),
 		status : () => ipcRenderer.send('status'),
 
+		nextTimer    : () => ipcRenderer.send('timer:next'),
 		removeSwitch : (index) => ipcRenderer.send('switch:remove', index),
 		removeTimer  : (index) => ipcRenderer.send('timer:remove', index),
-
-		saveSwitch : (data) => ipcRenderer.send('switch:save', data),
-		saveTimer  : (data) => ipcRenderer.send('timer:save', data),
-
-		nextTimer    : () => ipcRenderer.send('timer:next'),
-		toggleSwitch : (index) => ipcRenderer.send('switch:toggle', index),
-
 		saveSettings : (settings) => ipcRenderer.send('settings', settings),
+		saveSwitch   : (data) => ipcRenderer.send('switch:save', data),
+		saveTimer    : (data) => ipcRenderer.send('timer:save', data),
+		toggleSwitch : (index) => ipcRenderer.send('switch:toggle', index),
+		updateLog    : () => ipcRenderer.send('log'),
 
 		receive   : ( channel, func ) => {
 			const validChannels = new Set([
@@ -31,6 +28,7 @@ contextBridge.exposeInMainWorld(
 				'status',
 				'update',
 				'log',
+				'view',
 			])
 		
 			if ( validChannels.has( channel ) ) {

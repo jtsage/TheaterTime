@@ -202,14 +202,15 @@ class TimerSTD {
 
 	get serialize() {
 		return {
-			dateStarted    : this.#dateOrNull(this.dateStarted),
-			dateStopped    : this.#dateOrNull(this.dateStopped),
-			dateTarget     : this.#dateOrNull(this.targetDateTime),
-			reset_switches : this.reset_switches,
-			status         : this.status,
-			title          : this.title,
-			type           : this.type,
-			uuid           : this.uuid,
+			dateStarted      : this.#dateOrNull(this.dateStarted),
+			dateStopped      : this.#dateOrNull(this.dateStopped),
+			dateTarget       : this.#dateOrNull(this.targetDateTime),
+			reset_switches   : this.reset_switches,
+			sound_countdowns : this.sound_countdowns,
+			status           : this.status,
+			title            : this.title,
+			type             : this.type,
+			uuid             : this.uuid,
 		}
 	}
 
@@ -218,6 +219,8 @@ class TimerSTD {
 
 	timeAudio(time) {
 		switch ( time ) {
+			case 5400 : return 'Hour before half hour please. 90 Minutes.'
+			case 3600 : return 'One Hour Please.  One Hour.'
 			case 1800 : return 'Thirty Minutes Please.  Thirty Minutes.'
 			case 1200 : return 'Twenty Minutes Please.  Twenty Minutes.'
 			case 900  : return 'Fif-teen Minutes Please.  Fif-teen Minutes.'
@@ -389,20 +392,11 @@ const today_time = (hour, minute) => {
 	return now
 }
 
-const debug_time = () => {
-	const now = new Date()
-	now.setSeconds(0)
-	now.setMilliseconds(0)
-	now.setMinutes(now.getMinutes() + 21)
-	return now
-}
-
 const DefaultShow = [
 	{
 		minutes        : null,
 		reset_switches : null,
-		target         : debug_time(),
-		// target         : today_time(19, 30),
+		target         : today_time(19, 30),
 		title          : 'Pre-Show',
 		type           : TimerType.DOWN,
 		use_sound      : true,
@@ -448,7 +442,7 @@ const DefaultRehearsal = [
 		target         : today_time(22, 0),
 		title          : 'Rehearsal End',
 		type           : TimerType.DOWN,
-		use_sound      : true,
+		use_sound      : false,
 	},
 ]
 

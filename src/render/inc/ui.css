@@ -1,5 +1,12 @@
 .otherHead {
-	margin-top: -1.35em;
+	margin-top: 0em;
 	margin-bottom: 0.35em;
 	padding-right: 0.2em;
+}
+.vh-90 {
+	height: 90vh!important;
+}
+.audio-icon {
+	margin-top : -2em;
+	margin-bottom: 0.5em;
 }

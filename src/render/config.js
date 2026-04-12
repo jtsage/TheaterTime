@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	for ( const element of document.getElementById('config-tab-pane').querySelectorAll('input') ) {
 		element.addEventListener('change', () => { winStatus.dirty = true })
 	}
+	
 	document.getElementById('discard-button').addEventListener('click', () => {
 		window.ipc.config()
 		saveWarning.hide()
@@ -30,23 +31,37 @@ document.addEventListener('DOMContentLoaded', () => {
 	for (const triggerEl of document.querySelectorAll('#main-tab button')) {
 		const tabTrigger = new bootstrap.Tab(triggerEl)
 
-		triggerEl.addEventListener('click', (event) => {
-			event.preventDefault()
+		triggerEl.addEventListener('click', (e) => {
+			e.preventDefault()
+
+			clearInterval(window.logInterval)
+			winStatus.logInterval = null
+
 			if ( winStatus.dirty ) {
 				winStatus.nextTab = tabTrigger
 				saveWarning.show()
 			} else {
+				if ( e.target.id === 'log-tab' ) {
+					winStatus.logInterval = setInterval(() => {
+						window.ipc.updateLog()
+					}, 1000)
+				}
 				tabTrigger.show()
 			}
 		})
 	}
 })
 
+window.ipc.receive('view', (id) => {
+	document.getElementById(id).click()
+})
+
 const winStatus = {
-	dirty      : true,
-	nextTab    : null,
-	switchList : [],
-	timerCount : 0,
+	dirty       : true,
+	logInterval : null,
+	nextTab     : null,
+	switchList  : [],
+	timerCount  : 0,
 }
 
 const TimerType = Object.freeze({
@@ -58,12 +73,9 @@ const TimerType = Object.freeze({
 
 window.ipc.receive('config', (data) => {
 	updateConfig(data.settings)
-	winStatus.dirty = false
+	winStatus.dirty      = false
 	winStatus.timerCount = data.timers.length
-	winStatus.switchList.length = 0
-	for ( const toggle of data.toggle ) {
-		winStatus.switchList.push([toggle.id, toggle.title])
-	}
+	winStatus.switchList = data.toggle.map((toggle) => [toggle.id, toggle.title])
 
 	const switchConfig = document.getElementById('toggle-config')
 	switchConfig.innerHTML = data.toggle.map((toggle, index) => SwitchConfigHTML(toggle, index)).join('\n')
@@ -180,17 +192,23 @@ const mark_item = (e) => {
 const timer_details = () => {
 	for (const card of document.querySelectorAll('.timer-card')) {
 		switch (card.querySelector('select[name="type"]').value) {
-			case '1' :
+			case '1' : //count-up
 				card.querySelector('input[name="minutes"]').parentElement.classList.add('d-none')
 				card.querySelector('input[name="target"]').parentElement.classList.add('d-none')
+				card.querySelector('.select-resets').classList.remove('d-none')
+				card.querySelector('.toggle-sound_countdowns').classList.add('d-none')
 				break
-			case '2' :
+			case '2' : //count-down
 				card.querySelector('input[name="minutes"]').parentElement.classList.add('d-none')
 				card.querySelector('input[name="target"]').parentElement.classList.remove('d-none')
+				card.querySelector('.select-resets').classList.add('d-none')
+				card.querySelector('.toggle-sound_countdowns').classList.remove('d-none')
 				break
-			case '3' :
+			case '3' : //count-minutes
 				card.querySelector('input[name="minutes"]').parentElement.classList.remove('d-none')
 				card.querySelector('input[name="target"]').parentElement.classList.add('d-none')
+				card.querySelector('.select-resets').classList.remove('d-none')
+				card.querySelector('.toggle-sound_countdowns').classList.remove('d-none')
 				break
 			default :
 				break
@@ -218,7 +236,7 @@ const TimerConfigHTML = (timer, index, create = false) => {
 			'sound_countdowns',
 			'Sound',
 			timer.sound_countdowns,
-			'Play sounds for 30, 20, 15, 10, &amp; 5 minutes remain',
+			'Play sounds for 90, 60, 30, 20, 15, 10, &amp; 5 minutes remain',
 			{
 				falseColor : 'primary',
 				falseText  : 'Disabled',
@@ -270,7 +288,7 @@ const SwitchConfigHTML = (toggle, index, create = false) => {
 				trueText   : 'Reversed',
 			}
 		),
-		...HTMLSelectResets(toggle.reset_switches),
+		...HTMLSelectResets(toggle.reset_switches, toggle.id),
 
 		'</form></div></div>'
 	].join('\n')
@@ -309,7 +327,7 @@ const HTMLToggleButton = (name, title, value, desc = null, {trueColor = 'success
 	const id_1 = crypto.randomUUID()
 	const id_2 = crypto.randomUUID()
 	return [
-		'<div class="input-group mb-1">',
+		`<div class="input-group mb-1 toggle-${name}">`,
 		`<span title="${desc !== null ? desc : title}" class="input-group-text w-25">${title}</span><div class="btn-group w-75">`,
 		`<input type="radio" class="btn-check" name="${name}" value="true" id="${id_1}" autocomplete="off" ${value ? 'checked' : ''}>`,
 		`<label class="btn btn-outline-${trueColor} rounded-0" for="${id_1}">${trueText}</label>`,
@@ -320,13 +338,14 @@ const HTMLToggleButton = (name, title, value, desc = null, {trueColor = 'success
 	]
 }
 
-const HTMLSelectResets = (selected) => {
+const HTMLSelectResets = (selected, skip = null) => {
 	const selects = Array.isArray(selected) ? selected : []
 	return [
-		'<div class="input-group mb-1">',
+		'<div class="input-group mb-1 select-resets">',
 		'<span title="Reset switches on start" class="input-group-text w-25">Reset Switch(es)</span>',
 		'<div class="form-control">',
 		...winStatus.switchList.flatMap((element) => {
+			if ( skip === element[0] ) { return [] }
 			let isSelected = false
 			for ( const check of selects ) {
 				if ( check === element[0] ) { isSelected = true }

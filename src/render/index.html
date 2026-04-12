@@ -13,8 +13,8 @@
 	</head>
 
 	<body>
-		<h1 class="text-end h2 mt-1 me-1 d-none" id="mainHead">TheaterTime</h1>
-		<ul class="nav nav-tabs" id="main-tab" role="tablist">
+		<h1 class="h2 mt-1 me-1 d-none" id="mainHead">TheaterTime</h1>
+		<ul class="nav nav-tabs d-none" id="main-tab" role="tablist">
 			<li class="nav-item" role="presentation">
 				<button class="nav-link active" id="status-tab" data-bs-target="#status-tab-pane" type="button" role="tab" aria-controls="status-tab-pane" aria-selected="true">Status</button>
 			</li>
@@ -27,29 +27,34 @@
 			<li class="nav-item" role="presentation">
 				<button class="nav-link" id="config-tab" data-bs-target="#config-tab-pane" type="button" role="tab" aria-controls="config-tab-pane" aria-selected="false">Configuration</button>
 			</li>
+			<li class="nav-item" role="presentation">
+				<button class="nav-link" id="log-tab" data-bs-target="#log-tab-pane" type="button" role="tab" aria-controls="config-tab-pane" aria-selected="false">Configuration</button>
+			</li>
+			<li class="nav-item" role="presentation">
+				<button class="nav-link" id="help-tab" data-bs-target="#help-tab-pane" type="button" role="tab" aria-controls="config-tab-pane" aria-selected="false">Configuration</button>
+			</li>
 		</ul>
 		<div class="tab-content" id="main-tab-content">
 			<div class="tab-pane fade show active" id="status-tab-pane" role="tabpanel" aria-labelledby="status-tab" tabindex="0">
-				<h2 class="text-end h3 otherHead">Timer &amp; Switch Status</h2>
+				<h2 class="text-end h3 otherHead border-bottom mb-0">Timer &amp; Switch Status</h2>
 				<div class="row w-100 m-0 g-2">
 					<div class="col-3" id="status-toggle"></div>
 					<div class="col-9" id="status-timer"></div>
 				</div>
-				<div class="h-25 border rounded m-2 overflow-y-scroll font-monospace d-none"><pre id="log"></pre></div>
 			</div>
 			<div class="tab-pane fade" id="timer-tab-pane" role="tabpanel" aria-labelledby="timer-tab" tabindex="0">
-				<h2 class="text-end h3 otherHead">Timer Configuration</h2>
-				<div id="timer-config" class="w-100 px-2"></div>
+				<h2 class="text-end h3 otherHead border-bottom mb-0">Timer Settings</h2>
+				<div id="timer-config" class="w-100 px-2 mt-2"></div>
 				<button type="button" id="click-add-timer" class="btn btn-primary w-75 mb-2 mx-auto d-block">Add Timer</button>
 			</div>
 			<div class="tab-pane fade" id="toggle-tab-pane" role="tabpanel" aria-labelledby="toggle-tab" tabindex="0">
-				<h2 class="text-end h3 otherHead">Switch Configuration</h2>
-				<div id="toggle-config" class="w-100 px-2"></div>
+				<h2 class="text-end h3 otherHead border-bottom mb-0">Switch Settings</h2>
+				<div id="toggle-config" class="w-100 px-2 mt-2"></div>
 				<button type="button" id="click-add-switch" class="btn btn-primary w-75 mb-2 mx-auto d-block">Add Switch</button>
 			</div>
 			<div class="tab-pane fade" id="config-tab-pane" role="tabpanel" aria-labelledby="config-tab" tabindex="0">
-				<h2 class="text-end h3 otherHead">Communications</h2>
-				<div class="w-100 px-2">
+				<h2 class="text-end h3 otherHead border-bottom mb-0">General Settings</h2>
+				<div class="w-100 px-2 mt-2">
 					<div class="card mb-2">
 						<div class="card-header">General</div>
 						<div class="card-body">
@@ -105,21 +110,175 @@
 								<span class="input-group-text w-25">Listen Port</span>
 								<input type="number" min="1025" max="65500" step="1" class="form-control" id="receive-port">
 							</div>
-							<div class="row mt-2">
-								<div class="col-6">
-								<div class="form-text text-start ps-2 mb-1 mt-0 w-100"><code>/theaterTime/switch/##/on</code> Toggle switch ## on</div>
-								<div class="form-text text-start ps-2 mb-1 mt-0 w-100"><code>/theaterTime/switch/##/off</code> Toggle switch ## off</div>
-								<div class="form-text text-start ps-2 mb-1 mt-0 w-100"><code>/theaterTime/switch/##/toggle</code> Toggle switch ##</div>
-								</div><div class="col-6">
-								<div class="form-text text-start ps-2 mb-1 mt-0 w-100"><code>/theaterTime/timer/next</code> End current timer, start next</div>
-								<div class="form-text text-start ps-2 mb-1 mt-0 w-100"><code>/theaterTime/timer/previous</code> End current timer, start previous</div>
-								<div class="form-text text-start ps-2 mb-1 mt-0 w-100"><code>/theaterTime/timer/stop</code> Stop all timers</div>
-								<div class="form-text text-start ps-2 mb-1 mt-0 w-100"><code>/theaterTime/timer/reset</code> Reset all timers to configured state</div>
-								</div>
-							</div>
 						</div>
 					</div>
 					<button type="button" id="click-save-config" class="btn btn-primary w-75 mb-2 mx-auto d-block">Save Config &amp; Restart OSC</button>
+				</div>
+			</div>
+			<div class="tab-pane fade" id="log-tab-pane" role="tabpanel" aria-labelledby="log-tab" tabindex="0">
+				<h2 class="text-end h3 otherHead border-bottom mb-0">Log</h2>
+				<div class="d-flex flex-column vh-90">
+					<div class="h-100 border rounded m-2 overflow-y-scroll font-monospace flex-grow-1"><pre id="log"></pre></div>
+				</div>
+			</div>
+			<div class="tab-pane fade" id="help-tab-pane" role="tabpanel" aria-labelledby="help-tab" tabindex="0">
+				<h2 class="text-end h3 otherHead border-bottom mb-0">Help</h2>
+				<div class="card m-2">
+					<div class="card-header">Switches</div>
+					<div class="card-body">
+						<p class="mb-2">Switches are ON/OFF Data points. You can activate of deactivate them manually, and they can also be deactivated when another switch is thrown, or a timer is started. <em>As a note, the documentation assumes you won't have more than 99 switches - this isn't a real limit, but 2-digit padding is used for output.</em></p>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-25">Active / Inactive Text</span>
+							<span class="form-control">The text displayed when the switch is active or inactive</span>
+						</div>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-25">Color</span>
+							<span class="form-control">Standard is to use green when on, and red when off.  Reversing does the opposite</span>
+						</div>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-25">Speak</span>
+							<span class="form-control">A text string that will be machine-spoken when the switch is toggled active</span>
+						</div>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-25">Reset Switch(es)</span>
+							<span class="form-control">These are the switches that will be set to inactive when this switch is set active</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="card m-2 mt-0">
+					<div class="card-header">Timers</div>
+					<div class="card-body">
+						<p class="mb-2">Timers keep time.  They can track time <em>until</em> and event, or time <em>elapsed</em> in an event.  You can only have 1 timer <em>active</em> at a time, but there are provisions for running inactive timers, depending on type.</p>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-25">Count Down</span>
+							<span class="form-control">This timer type counts down to a pre-specified DateTime. For instance, your event starts today at 7:30PM.  You can have multiple count-down timers, and they all run automatically from start, and stop when marked inactive.</span>
+						</div>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-25">Count Up</span>
+							<span class="form-control">This timer type tracks elapsed time.  Only one count-up timer can be active at a time. For instance, an act timer.</span>
+						</div>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-25">Count Minutes</span>
+							<span class="form-control">This timer type counts down to a pre-specified number of minutes. For instance, a 15 minute intermission.  Only one minute count-down timer can be active at a time.</span>
+						</div>
+						<p class="my-2">Additional options are available on some timers</p>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-25">Sound</span>
+							<span class="form-control">The system will speak <code>"## Minutes Please.  ## Minutes"</code> for 90, 60, 30, 20, 15, 10, and 5 minutes remaining.  This setting is unavailable on count-up timers. </span>
+						</div>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-25">Reset Switch(es)</span>
+							<span class="form-control">These are the switches that will be set to inactive when this timer is set active.  This setting is unavailable on count-down type timers.</span>
+						</div>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-25">Minutes</span>
+							<span class="form-control">The number of minutes to count (plus 2 seconds, so audio plays correctly). This settings is only available on minute count-down type timers.</span>
+						</div>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-25">Target</span>
+							<span class="form-control">The target DateTime to count-down to.  This setting is only available on count-down type timers.</span>
+						</div>
+					</div>
+				</div>
+				<div class="card m-2 mt-0">
+					<div class="card-header">OSC Input</div>
+					<div class="card-body">
+						<p>The recommended method of interacting with TheaterTime is to use OSC messages.</p>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-100">Switches</span>
+						</div>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-50">Toggle a switch active</span>
+							<span class="form-control"><code>/theaterTime/switch/on <em>[int:1..99]</em></code></span>
+						</div>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-50">Toggle a switch inactive</span>
+							<span class="form-control"><code>/theaterTime/switch/off <em>[int:1..99]</em></code></span>
+						</div>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-50">Toggle a switch to it's opposite state</span>
+							<span class="form-control"><code>/theaterTime/switch/toggle <em>[int:1..99]</em></code></span>
+						</div>
+						<div class="input-group mb-1 mt-4">
+							<span class="input-group-text w-100">Timers</span>
+						</div>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-50">Advance to the next timer</span>
+							<span class="form-control"><code>/theaterTime/timer/next</code></span>
+						</div>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-50">Return to the previous timer</span>
+							<span class="form-control"><code>/theaterTime/timer/previous</code></span>
+						</div>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-50">Stop all timers</span>
+							<span class="form-control"><code>/theaterTime/timer/stop</code></span>
+						</div>
+						<div class="input-group mb-1 mt-4">
+							<span class="input-group-text w-100">Other</span>
+						</div>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-50">Reset all timers &amp; switches</span>
+							<span class="form-control"><code>/theaterTime/reset</code></span>
+						</div>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-50">Speak an arbitrary string</span>
+							<span class="form-control"><code>/theaterTime/speak <em>[string]</em></code></span>
+						</div>
+					</div>
+				</div>
+				<div class="card m-2 mt-0">
+					<div class="card-header">OSC Output</div>
+					<div class="card-body">
+						<p>TheaterTime is intended for use with Vor - but it can talk to any application that consumes OSC.  Configuration of which items to send are on the settings page, their output is explained here.</p>
+						<div class="input-group mb-0">
+							<span class="input-group-text w-25 rounded-bottom-0">Switch Single</span>
+							<span class="form-control rounded-bottom-0"><code>/theaterTime/switch/[01..99] [s:Title] [s:Active/Inactive Text] [i:0/1]</code></span>
+						</div>
+						<div class="input-group mb-0">
+							<span class="input-group-text w-25 rounded-0 ps-4">Inactive Example</span>
+							<span class="form-control rounded-0"><code>/theaterTime/switch/01 [s:"House"] [s:"House is NOT Open"] [i:0]</code></span>
+						</div>
+						<div class="input-group mb-2">
+							<span class="input-group-text w-25 rounded-top-0 ps-4">Active Example</span>
+							<span class="form-control rounded-top-0"><code>/theaterTime/switch/01 [s:"House"] [s:"House is OPEN"] [i:1]</code></span>
+						</div>
+
+						<div class="input-group mb-0">
+							<span class="input-group-text w-25 rounded-bottom-0">Switch Toggle</span>
+							<span class="form-control rounded-bottom-0"><code>/theaterTime/toggle/[01..99] [s:Active text/empty] [s:Inactive Text/empty]</code></span>
+						</div>
+						<div class="input-group mb-0">
+							<span class="input-group-text w-25 rounded-0 ps-4">Inactive Example</span>
+							<span class="form-control rounded-0"><code>/theaterTime/toggle/01 [s:""] [s:"House is NOT Open"]</code></span>
+						</div>
+						<div class="input-group mb-0">
+							<span class="input-group-text w-25 rounded-0 ps-4">Active Example</span>
+							<span class="form-control rounded-0"><code>/theaterTime/toggle/01 [s:"House is OPEN"] [s:""]</code></span>
+						</div>
+						<div class="input-group mb-2">
+							<span class="input-group-text w-25 rounded-top-0 ps-4">Reverse Color</span>
+							<span class="form-control rounded-top-0"><code>/theaterTime/toggle/[01..99] [s:Inactive Text/empty] [s:Active text/empty]</code></span>
+						</div>
+
+						<div class="input-group mb-0">
+							<span class="input-group-text w-25 rounded-bottom-0">Current Timer</span>
+							<span class="form-control rounded-bottom-0"><code>/theaterTime/currentTimer [i:Seconds] [s:Title] [s:Time String]</code></span>
+						</div>
+						<div class="input-group mb-0">
+							<span class="input-group-text w-25 rounded-0 ps-4">Example</span>
+							<span class="form-control rounded-0"><code>/theaterTime/currentTimer [i:19607] [s:"Pre-Show"] [s:"↓ - 05:26:47"]</code></span>
+						</div>
+						<div class="input-group mb-0">
+							<span class="input-group-text w-25 rounded-0 ps-4">Expired Example</span>
+							<span class="form-control rounded-0"><code>/theaterTime/currentTimer [i:-2141] [s:"Pre-Show"] [s:"↓ + 00:35:41"]</code></span>
+						</div>
+						<div class="input-group mb-1">
+							<span class="input-group-text w-25 rounded-top-0 ps-4">Blink Example</span>
+							<span class="form-control rounded-top-0"><code>/theaterTime/currentTimer [i:-2187] [s:""] [s:""]</code></span>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>

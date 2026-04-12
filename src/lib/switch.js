@@ -74,7 +74,6 @@ class Switch {
 class SwitchStack {
 	#stack        = []
 
-
 	add_stack(stack) {
 		if (Array.isArray(stack)) {
 			for (const toggle of stack) {
