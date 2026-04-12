@@ -60,7 +60,7 @@ window.ipc.receive('update', (data) => {
 })
 
 window.ipc.receive('log', (data) => {
-	document.getElementById('log').innerText = data
+	document.getElementById('log').innerText = data.join('')
 })
 
 window.ipc.receive('status', (data) => {

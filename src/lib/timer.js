@@ -43,22 +43,22 @@ class TimerStack {
 	}
 
 	add({
-		title          = null,
-		reset_switches = null,
-		use_sound      = false,
-		target         = null,
-		minutes        = null,
-		type           = TimerType.UNDEFINED,
+		title            = null,
+		reset_switches   = null,
+		sound_countdowns = false,
+		target           = null,
+		minutes          = null,
+		type             = TimerType.UNDEFINED,
 	} = {}) {
 		switch (type) {
 			case TimerType.UP :
 				this.#stack.push(new TimerUp(title, reset_switches))
 				break
 			case TimerType.DOWN :
-				this.#stack.push(new TimerDown(title, target, use_sound, reset_switches))
+				this.#stack.push(new TimerDown(title, target, sound_countdowns, reset_switches))
 				break
 			case TimerType.MINUTES :
-				this.#stack.push(new TimerMinutes(title, minutes, use_sound, reset_switches))
+				this.#stack.push(new TimerMinutes(title, minutes, sound_countdowns, reset_switches))
 				break
 			default :
 				break
@@ -281,10 +281,10 @@ class TimerUp extends TimerSTD {
 
 // MARK: TimerCountDown
 class TimerMinutes extends TimerSTD {
-	constructor(title, minutes, use_sound = false, reset_switches = null) {
+	constructor(title, minutes, sound_countdowns = false, reset_switches = null) {
 		super(title, reset_switches)
 		this.targetMinutes    = minutes
-		this.sound_countdowns = use_sound
+		this.sound_countdowns = sound_countdowns
 		this.type             = TimerType.MINUTES
 	}
 
@@ -333,7 +333,7 @@ class TimerMinutes extends TimerSTD {
 
 // MARK: TimerABSCountDown
 class TimerDown extends TimerSTD {
-	constructor(title, target, use_sound = false, reset_switches = null) {
+	constructor(title, target, sound_countdowns = false, reset_switches = null) {
 		super(title, reset_switches)
 
 		if ( target instanceof Date ) {
@@ -342,7 +342,7 @@ class TimerDown extends TimerSTD {
 			this.targetDateTime   = new Date(target)
 		}
 
-		this.sound_countdowns = use_sound
+		this.sound_countdowns = sound_countdowns
 		this.type             = TimerType.DOWN
 
 		this.start()
@@ -394,66 +394,66 @@ const today_time = (hour, minute) => {
 
 const DefaultShow = [
 	{
-		minutes        : null,
-		reset_switches : null,
-		target         : today_time(19, 30),
-		title          : 'Pre-Show',
-		type           : TimerType.DOWN,
-		use_sound      : true,
+		minutes          : null,
+		reset_switches   : null,
+		sound_countdowns : true,
+		target           : today_time(19, 30),
+		title            : 'Pre-Show',
+		type             : TimerType.DOWN,
 	},
 	{
-		minutes        : null,
-		reset_switches : null,
-		target         : null,
-		title          : 'Act I',
-		type           : TimerType.UP,
-		use_sound      : false,
+		minutes          : null,
+		reset_switches   : null,
+		sound_countdowns : false,
+		target           : null,
+		title            : 'Act I',
+		type             : TimerType.UP,
 	},
 	{
-		minutes        : 15,
-		reset_switches : ['switch-places'],
-		target         : null,
-		title          : 'Intermission',
-		type           : TimerType.MINUTES,
-		use_sound      : true,
+		minutes          : 15,
+		reset_switches   : ['switch-places'],
+		sound_countdowns : true,
+		target           : null,
+		title            : 'Intermission',
+		type             : TimerType.MINUTES,
 	},
 	{
-		minutes        : null,
-		reset_switches : null,
-		target         : null,
-		title          : 'Act II',
-		type           : TimerType.UP,
-		use_sound      : false,
+		minutes          : null,
+		reset_switches   : null,
+		sound_countdowns : false,
+		target           : null,
+		title            : 'Act II',
+		type             : TimerType.UP,
 	},
 ]
 
 const DefaultRehearsal = [
 	{
-		minutes        : null,
-		reset_switches : null,
-		target         : today_time(17, 0),
-		title          : 'Rehearsal Start',
-		type           : TimerType.DOWN,
-		use_sound      : true,
+		minutes          : null,
+		reset_switches   : null,
+		sound_countdowns : true,
+		target           : today_time(17, 0),
+		title            : 'Rehearsal Start',
+		type             : TimerType.DOWN,
 	},
 	{
-		minutes        : null,
-		reset_switches : null,
-		target         : today_time(22, 0),
-		title          : 'Rehearsal End',
-		type           : TimerType.DOWN,
-		use_sound      : false,
+		minutes          : null,
+		reset_switches   : null,
+		sound_countdowns : false,
+		target           : today_time(22, 0),
+		title            : 'Rehearsal End',
+		type             : TimerType.DOWN,
 	},
 ]
 
 const DefaultEmpty = [
 	{
-		minutes        : null,
-		reset_switches : null,
-		target         : today_time(12, 0),
-		title          : 'Timer',
-		type           : TimerType.DOWN,
-		use_sound      : true,
+		minutes          : null,
+		reset_switches   : null,
+		sound_countdowns : true,
+		target           : today_time(12, 0),
+		title            : 'Timer',
+		type             : TimerType.DOWN,
 	},
 ]
 

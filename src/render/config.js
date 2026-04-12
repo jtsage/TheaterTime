@@ -8,6 +8,7 @@
 */
 /* global bootstrap audioSystem */
 
+// MARK: doc load
 document.addEventListener('DOMContentLoaded', () => {
 	window.ipc.config()
 
@@ -71,6 +72,7 @@ const TimerType = Object.freeze({
 	3 : 'Count Down to # of Minutes',
 })
 
+// MARK: config receive
 window.ipc.receive('config', (data) => {
 	updateConfig(data.settings)
 	winStatus.dirty      = false
@@ -116,7 +118,7 @@ window.ipc.receive('config', (data) => {
 	document.getElementById('click-add-timer').classList.remove('d-none')
 })
 
-
+// MARK: save_item
 const save_item = (timers = true) => {
 	const container = document.getElementById(timers ? 'timer-config' : 'toggle-config')
 	const saveData  = []
@@ -161,6 +163,7 @@ const save_item = (timers = true) => {
 	}
 }
 
+// MARK: remove_item
 const remove_item = (e, type = 'switch') => {
 	const button = e.target.tagName === 'button' ? e.target : e.target.closest('button')
 	const index  = button.getAttribute('data-index')
@@ -178,6 +181,7 @@ const remove_item = (e, type = 'switch') => {
 	}
 }
 
+// MARK: mark_item
 const mark_item = (e) => {
 	winStatus.dirty = true
 	const card = e.target.closest('div.card')
@@ -189,6 +193,7 @@ const mark_item = (e) => {
 	}
 }
 
+// MARK: timer_details
 const timer_details = () => {
 	for (const card of document.querySelectorAll('.timer-card')) {
 		switch (card.querySelector('select[name="type"]').value) {
@@ -221,6 +226,7 @@ const timer_date_time = (date) => {
 	return `${dateObj.getFullYear()}-${(dateObj.getMonth()+1).toString().padStart(2, '0')}-${dateObj.getDate().toString().padStart(2, '0')}T${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`
 }
 
+// MARK: timer HTML
 const TimerConfigHTML = (timer, index, create = false) => {
 	return [
 		'<div class="card mb-2 timer-card">',
@@ -262,6 +268,7 @@ const TimerConfigHTML = (timer, index, create = false) => {
 	].join('\n')
 }
 
+// MARK: switch HTML
 const SwitchConfigHTML = (toggle, index, create = false) => {
 	return [
 		`<div class="card mb-2" data-index="${index}">`,
@@ -294,6 +301,7 @@ const SwitchConfigHTML = (toggle, index, create = false) => {
 	].join('\n')
 }
 
+// MARK: other HTML
 const HTMLButtons = (type, index, create = false, no_delete_first = true) => {
 	return [
 		`<button data-action="save-${type}" title="Save ALL Changes" class="btn btn-sm btn-success action-btn ${!create ? 'd-none':''}" type="button"><i class="bi bi-floppy2"></i></button>`,
@@ -359,6 +367,7 @@ const HTMLSelectResets = (selected, skip = null) => {
 	]
 }
 
+// MARK: general set
 const updateConfig = (settings) => {
 	document.getElementById('send-host').value = settings.send.host
 	document.getElementById('send-port').value = settings.send.port
@@ -391,6 +400,7 @@ function clientSaveConfig() {
 }
 
 
+// MARK: client buttons
 function clientAddSwitch() {
 	document.getElementById('click-add-switch').classList.add('d-none')
 	const thisSwitch = document.createElement('div')

@@ -20,23 +20,31 @@ let mainWindow = null
 
 const dataStack = new ThrTime.Stack()
 
-const oscIN  = dgram.createSocket({type : 'udp4', reuseAddr : true})
+let   oscIN  = null
 const oscOUT = dgram.createSocket({type : 'udp4', reuseAddr : true})
 const oscLib = new osc.simpleOscLib()
 
-oscIN.on('message', (msg, _rinfo) => { doOSC(msg) })
-oscIN.on('error',   (err) => {
-	dataStack.log.push(`osc listener error:\n${err.stack}\n`)
-	oscIN.close()
-})
-oscIN.on('listening', () => {
-	const address = oscIN.address()
-	dataStack.log.push(`listening to osc on ${address.address}:${address.port}\n`)
-})
-
-oscIN.bind(dataStack.settings.receive.port, '0.0.0.0')
+openOSCListener()
 
 
+function openOSCListener() {
+	oscIN  = dgram.createSocket({type : 'udp4', reuseAddr : true})
+	oscIN.on('message', (msg, _rinfo) => { doOSC(msg) })
+	oscIN.on('error',   (err) => {
+		dataStack.log.push(`osc listener error:\n${err.stack}\n`)
+		oscIN.close()
+	})
+	oscIN.on('listening', () => {
+		const address = oscIN.address()
+		dataStack.log.push(`listening to osc on ${address.address}:${address.port}\n`)
+	})
+
+	try {
+		oscIN.bind(dataStack.settings.receive.port, '0.0.0.0')
+	} catch (err) {
+		dataStack.log.push(`osc listener error:\n${err.stack}\n`)
+	}
+}
 
 const createWindow = () => {
 	mainWindow = new BrowserWindow({
@@ -97,8 +105,12 @@ app.whenReady().then(() => {
 
 	ipcMain.on('settings', (_, settings) => {
 		dataStack.saveSettings(settings)
-		oscIN.close()
-		oscIN.bind(dataStack.settings.receive.port, '0.0.0.0')
+		try {
+			oscIN.close()
+		} catch {
+			dataStack.log.push('Socket close failed\n')
+		}
+		openOSCListener()
 		outputConfig()
 	})
 
@@ -149,7 +161,7 @@ const template = [
 			{ accelerator : 'CommandOrControl+S', label : 'Save Configuration', click : () => {
 				dialog.showSaveDialog(mainWindow, {
 					defaultPath : app.getPath('desktop'),
-					filters     : [{ name : 'ThrTime Files', extensions : ['ttime'] }],
+					filters     : [{ name : 'JSON Files', extensions : ['json'] }],
 				}).then(async (result) => {
 					if ( !result.canceled ) {
 						try {
@@ -168,7 +180,7 @@ const template = [
 				const options = {
 					properties  : ['openFile'],
 					defaultPath : app.getPath('desktop'),
-					filters     : [{ name : 'ThrTime Files', extensions : ['ttime'] }],
+					filters     : [{ name : 'JSON Files', extensions : ['json'] }],
 				}
 
 				dialog.showOpenDialog(mainWindow, options).then((result) => {
@@ -177,6 +189,8 @@ const template = [
 							const fileRaw  = fs.readFileSync(result.filePaths[0])
 							const fileJSON = JSON.parse(fileRaw)
 							dataStack.config = fileJSON
+							oscIN.close()
+							openOSCListener()
 							configChange()
 						} catch (err) {
 							dataStack.log.push(err)
