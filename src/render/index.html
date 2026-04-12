@@ -50,15 +50,26 @@
 				<h2 class="text-end h3 otherHead">Communications</h2>
 				<div class="w-100 px-2">
 					<div class="card mb-2">
+						<div class="card-header">General</div>
+						<div class="card-body">
+							<div class="input-group mb-0">
+								<span class="input-group-text w-75">Audio</span>
+								<input type="checkbox" class="btn-check" id="config-audio">
+								<label class="btn btn-outline-primary w-25 rounded-end" for="config-audio">Enabled</label>
+								<div class="form-text text-end pe-2 mt-0 w-100">Allow audio output</div>
+							</div>
+						</div>
+					</div>
+					<div class="card mb-2">
 						<div class="card-header">Output</div>
 						<div class="card-body">
 							<div class="input-group mb-2">
 								<span class="input-group-text w-25">Output IP</span>
-								<input type="text" class="form-control" name="send-host">
+								<input type="text" class="form-control" id="send-host">
 							</div>
 							<div class="input-group mb-3">
 								<span class="input-group-text w-25">Output Port</span>
-								<input type="number" min="1025" max="65500" step="1" class="form-control" name="send-port">
+								<input type="number" min="1025" max="65500" step="1" class="form-control" id="send-port">
 							</div>
 							<div class="input-group mb-3">
 								<span class="input-group-text w-75">Switches</span>
@@ -91,7 +102,7 @@
 						<div class="card-body">
 							<div class="input-group mb-0">
 								<span class="input-group-text w-25">Listen Port</span>
-								<input type="number" min="1025" max="65500" step="1" class="form-control" name="receive-port">
+								<input type="number" min="1025" max="65500" step="1" class="form-control" id="receive-port">
 							</div>
 							<div class="row mt-2">
 								<div class="col-6">

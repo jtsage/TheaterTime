@@ -5,9 +5,12 @@
 	(c) 2026 J.T.Sage - MIT License
 */
 const debug = true
+
 const { app, BrowserWindow, ipcMain, Menu } = require('electron')
-const path = require('node:path')
+const path    = require('node:path')
+const dgram   = require('node:dgram')
 const ThrTime = require('./lib/thrtime.js')
+const osc     = require('simple-osc-lib')
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { app.quit() }
@@ -15,6 +18,24 @@ if (require('electron-squirrel-startup')) { app.quit() }
 let mainWindow = null
 
 const dataStack = new ThrTime.Stack()
+
+const oscIN  = dgram.createSocket({type : 'udp4', reuseAddr : true})
+const oscOUT = dgram.createSocket({type : 'udp4', reuseAddr : true})
+const oscLib = new osc.simpleOscLib()
+
+oscIN.on('message', (msg, _rinfo) => { doOSC(msg) })
+oscIN.on('error',   (err) => {
+	dataStack.log.push(`osc listener error:\n${err.stack}\n`)
+	oscIN.close()
+})
+oscIN.on('listening', () => {
+	const address = oscIN.address()
+	dataStack.log.push(`listening to osc on ${address.address}:${address.port}\n`)
+})
+
+oscIN.bind(dataStack.settings.receive.port, '0.0.0.0')
+
+
 
 const createWindow = () => {
 	mainWindow = new BrowserWindow({
@@ -70,9 +91,18 @@ app.whenReady().then(() => {
 		outputStatus()
 	})
 
+	ipcMain.on('settings', (_, settings) => {
+		dataStack.saveSettings(settings)
+		oscIN.close()
+		oscIN.bind(dataStack.settings.receive.port, '0.0.0.0')
+		outputConfig()
+	})
+
 	createWindow()
 
 	setInterval(outputUpdate, 1000)
+	setInterval(oscActiveTimer, 500)
+	setInterval(oscToggle, 5000)
 
 	// On OS X it's common to re-create a window in the app when the
 	// dock icon is clicked and there are no other windows open.
@@ -105,9 +135,9 @@ const template = [
 			{
 				label : 'New',
 				submenu : [
-					{ label : 'New Blank Config', click : () => {} },
-					{ label : 'New from Rehearsal Template', click : () => {} },
-					{ label : 'New from Show Template', click : () => {} },
+					{ label : 'New Blank Config', click : () => { dataStack.defaultEmpty() } },
+					{ label : 'New from Rehearsal Template', click : () => { dataStack.defaultRehearsal() } },
+					{ label : 'New from Show Template', click : () => { dataStack.defaultShow() } },
 				],
 			},
 			{ type : 'separator' },
@@ -150,3 +180,97 @@ const template = [
 
 const menu = Menu.buildFromTemplate(template)
 Menu.setApplicationMenu(menu)
+
+
+function doOSC(packet) {
+	try {
+		const oscPacket    = oscLib.readPacket(packet)
+		const addressParts = oscPacket.address.replace('/', '').split('/')
+
+		if ( addressParts[0] !== 'theaterTime' ) { return }
+
+		dataStack.log.push(`Acting on OSC : ${addressParts.join('/')}\n`)
+
+		if ( addressParts[1] === 'switch' ) {
+			const index = parseInt(addressParts[2], 10) - 1
+			if      ( addressParts[3] === 'on' )     { dataStack.timers.on(index) }
+			else if ( addressParts[3] === 'off' )    { dataStack.timers.off(index) }
+			else if ( addressParts[3] === 'toggle' ) { dataStack.toggleSwitch(index) }
+		} else if ( addressParts[1] === 'timer' ) {
+			if      ( addressParts[2] === 'next' )     { dataStack.next_timer() }
+			else if ( addressParts[2] === 'previous' ) { dataStack.timers.previous() }
+			else if ( addressParts[2] === 'stop' )     { dataStack.timers.stop_all() }
+			else if ( addressParts[2] === 'reset' )    { dataStack.reset_all() }
+			oscToggle()
+		} else if ( addressParts[1] === 'speak' ) {
+			const speak = oscPacket.args[0]?.value || null
+			if ( speak !== null && speak !== '' ) { dataStack.speakStack.push(speak) }
+		}
+		outputStatus()
+	} catch (err) {
+		dataStack.log.push(`OSC packet problem : ${err}\n`)
+	}
+}
+
+
+
+// MARK: OSC (send)
+function oscSend(buffer) {
+	oscOUT.send(buffer, 0, buffer.length, dataStack.settings.send.port, dataStack.settings.send.host)
+}
+
+function oscActiveTimer() {
+	if ( dataStack.settings.send.active ) {
+		const timer = dataStack.timers.current
+		const forceEmpty = dataStack.settings.send.blink && ( timer.type !== 1 && timer.wholeSeconds < 0 && timer.wholeSeconds % 3 === 0 )
+
+		if ( timer === null ) { return }
+
+		oscSend(oscLib
+			.messageBuilder('/theaterTime/currentTimer')
+			.integer(timer.wholeSeconds)
+			.string(forceEmpty ? '' : timer.title)
+			.string(forceEmpty ? '' : timer.formatTime)
+			.toBuffer()
+		)
+	}
+}
+
+function oscToggle() {
+	// Old way of sending.
+	if ( dataStack.settings.send.switch ) {
+		oscSend(oscLib.buildBundle({
+			timetag  : oscLib.getTimeTagBufferFromDelta(50/1000),
+			elements : dataStack.toggle.all.map((element, index) => oscLib
+				.messageBuilder(`/theaterTime/switch/${(index+1).toString().padStart(2, '0')}`)
+				.string(element.title)
+				.string(element.status === 1 ? element.textActive : element.textInactive)
+				.integer(element.status)
+				.toBuffer()
+			),
+		}))
+	}
+
+	// New way of sending
+	// argument 1 : onText (if on) or empty
+	// argument 2:  offText (if off) or empty
+	if ( dataStack.settings.send.toggle ) {
+		oscSend(oscLib.buildBundle({
+			timetag  : oscLib.getTimeTagBufferFromDelta(50/1000),
+			elements : dataStack.toggle.all.map((e, index) => {
+				const textStrings = [
+					e.status === 1 ? e.textActive : ' ',
+					e.status === 1 ? ' ' : e.textInactive
+				]
+
+				if ( e.reverseColor ) { textStrings.reverse() }
+
+				return oscLib
+					.messageBuilder(`/theaterTime/toggle/${(index+1).toString().padStart(2, '0')}`)
+					.string(textStrings[0])
+					.string(textStrings[1])
+					.toBuffer()
+			}),
+		}))
+	}
+}

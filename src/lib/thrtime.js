@@ -10,10 +10,12 @@ const Switches = require('./switch.js')
 
 class DataStack {
 	speakStack  = []
+	log         = []
 	timers      = null
 	toggle      = null
-	connections = {
-		send : {
+	settings    = {
+		audio : true,
+		send  : {
 			host : '127.0.0.1',
 			port : 4444,
 
@@ -37,10 +39,40 @@ class DataStack {
 
 	get config() {
 		return {
-			timers : this.timers.config,
-			toggle : this.toggle.config,
-			connections : this.connections,
+			settings    : this.settings,
+			timers      : this.timers.config,
+			toggle      : this.toggle.config,
 		}
+	}
+
+	defaultShow() {
+		this.timers.clear()
+		this.timers.add_stack(Timers.DefaultShow)
+		this.toggle.clear()
+		this.toggle.add_stack(Switches.Default)
+	}
+
+	defaultRehearsal() {
+		this.timers.clear()
+		this.timers.add_stack(Timers.DefaultRehearsal)
+		this.toggle.clear()
+		this.toggle.add_stack(Switches.Rehearsal)
+	}
+
+	defaultEmpty() {
+		this.timers.clear()
+		this.timers.add_stack(Timers.DefaultEmpty)
+		this.toggle.clear()
+	}
+
+	set config(newConfig) {
+		this.settings = newConfig.settings
+
+		this.timers.clear()
+		this.timers.add_stack(newConfig.timers)
+
+		this.toggle.clear()
+		this.toggle.add_stack(newConfig.toggle)
 	}
 
 	get status() {
@@ -53,7 +85,6 @@ class DataStack {
 
 	get update() {
 		const timers = this.timers.update
-		console.log(timers)
 		for ( const timer of timers ) {
 			if ( timer.speak !== null ) { this.speakStack.push(timer.speak) }
 		}
@@ -78,6 +109,10 @@ class DataStack {
 		for ( const reset of this.timers.current.reset_switches ) {
 			this.toggle.force_off(reset)
 		}
+	}
+
+	saveSettings(settings) {
+		this.settings = settings
 	}
 }
 

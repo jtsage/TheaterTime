@@ -11,6 +11,7 @@ let isInit = false
 const audioSystem = {
 	blocked : false,
 	chimes  : null,
+	enabled : true,
 	stack   : [],
 	synth   : window.speechSynthesis,
 	utter   : new SpeechSynthesisUtterance(),
@@ -39,8 +40,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	setInterval(() => {
 		if ( audioSystem.stack.length !== 0 && !audioSystem.blocked ) {
-			audioSystem.blocked = true
-			audioSystem.chimes.play()
+			if ( audioSystem.enabled ) {
+				audioSystem.blocked = true
+				audioSystem.chimes.play()
+			} else {
+				audioSystem.stack.length = 0
+			}
 		}
 	}, 1000)
 })

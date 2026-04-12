@@ -6,7 +6,7 @@
 
 	Configuration Interaction
 */
-/* global bootstrap */
+/* global bootstrap audioSystem */
 
 document.addEventListener('DOMContentLoaded', () => {
 	window.ipc.config()
@@ -15,7 +15,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	document.getElementById('click-add-timer').addEventListener('click', () => { clientAddTimer() })
 	document.getElementById('click-add-switch').addEventListener('click', () => { clientAddSwitch() })
+	document.getElementById('click-save-config').addEventListener('click', () => { clientSaveConfig() })
 
+	for ( const element of document.getElementById('config-tab-pane').querySelectorAll('input') ) {
+		element.addEventListener('change', () => { winStatus.dirty = true })
+	}
 	document.getElementById('discard-button').addEventListener('click', () => {
 		window.ipc.config()
 		saveWarning.hide()
@@ -56,7 +60,7 @@ window.ipc.receive('config', (data) => {
 	// eslint-disable-next-line no-console
 	console.log(data)
 
-	updateConfig(data.connections)
+	updateConfig(data.settings)
 	winStatus.dirty = false
 	winStatus.timerCount = data.timers.length
 	winStatus.switchList.length = 0
@@ -337,15 +341,35 @@ const HTMLSelectResets = (selected) => {
 	]
 }
 
-const updateConfig = (config) => {
-	const pane = document.getElementById('config-tab-pane')
-	pane.querySelector('[name="send-host"]').value = config.send.host
-	pane.querySelector('[name="send-port"]').value = config.send.port
-	document.getElementById('send-switch').checked = config.send.switch
-	document.getElementById('send-toggle').checked = config.send.toggle
-	document.getElementById('send-active').checked = config.send.active
-	document.getElementById('send-blink').checked  = config.send.blink
-	pane.querySelector('[name="receive-port"]').value = config.receive.port
+const updateConfig = (settings) => {
+	document.getElementById('send-host').value = settings.send.host
+	document.getElementById('send-port').value = settings.send.port
+	document.getElementById('send-switch').checked = settings.send.switch
+	document.getElementById('send-toggle').checked = settings.send.toggle
+	document.getElementById('send-active').checked = settings.send.active
+	document.getElementById('send-blink').checked  = settings.send.blink
+	document.getElementById('receive-port').value = settings.receive.port
+	document.getElementById('config-audio').checked = settings.audio
+	audioSystem.enabled = settings.audio
+}
+
+function clientSaveConfig() {
+	winStatus.dirty = false
+	const settings = {
+		audio : document.getElementById('config-audio').checked,
+		send : {
+			active : document.getElementById('send-active').checked,
+			blink  : document.getElementById('send-blink').checked,
+			host   : document.getElementById('send-host').value,
+			port   : document.getElementById('send-port').value,
+			switch : document.getElementById('send-switch').checked,
+			toggle : document.getElementById('send-toggle').checked,
+		},
+		receive : {
+			port : document.getElementById('receive-port').value,
+		},
+	}
+	window.ipc.saveSettings(settings)
 }
 
 

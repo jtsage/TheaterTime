@@ -107,8 +107,8 @@ class TimerStack {
 
 	get current() {
 		return this.#init ?
-			this.#stack[this.current_timer].serialize :
-			{}
+			this.#stack[this.current_timer].osc :
+			null
 	}
 
 	get all() {
@@ -207,13 +207,14 @@ class TimerSTD {
 		}
 	}
 
+	get osc() { return { type : this.type, title : this.title, ...this.update } }
 	get update() { return { uuid : this.uuid, status : this.status } }
 
 	timeAudio(time) {
 		switch ( time ) {
 			case 1800 : return 'Thirty Minutes Please.  Thirty Minutes.'
 			case 1200 : return 'Twenty Minutes Please.  Twenty Minutes.'
-			case 900  : return 'Fifteen Minutes Please.  Fifteen Minutes.'
+			case 900  : return '15 Minutes Please.  15 Minutes.'
 			case 600  : return 'Ten Minutes Please.  Ten Minutes.'
 			case 300  : return 'Five Minutes Please.  Five Minutes.'
 			default   : return null
@@ -445,11 +446,23 @@ const DefaultRehearsal = [
 	},
 ]
 
+const DefaultEmpty = [
+	{
+		minutes        : null,
+		reset_switches : null,
+		target         : today_time(12, 0),
+		title          : 'Timer',
+		type           : TimerType.DOWN,
+		use_sound      : true,
+	},
+]
+
 module.exports = {
 	Stack  : TimerStack,
 	Status : TimerStatus,
 	Type   : TimerType,
 
+	DefaultEmpty     : DefaultEmpty,
 	DefaultRehearsal : DefaultRehearsal,
 	DefaultShow      : DefaultShow,
 }

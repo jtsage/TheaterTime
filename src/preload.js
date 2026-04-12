@@ -23,6 +23,8 @@ contextBridge.exposeInMainWorld(
 		nextTimer    : () => ipcRenderer.send('timer:next'),
 		toggleSwitch : (index) => ipcRenderer.send('switch:toggle', index),
 
+		saveSettings : (settings) => ipcRenderer.send('settings', settings),
+
 		receive   : ( channel, func ) => {
 			const validChannels = new Set([
 				'config',
