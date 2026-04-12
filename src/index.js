@@ -6,9 +6,10 @@
 */
 const debug = true
 
-const { app, BrowserWindow, ipcMain, Menu } = require('electron')
+const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron')
 const path    = require('node:path')
 const dgram   = require('node:dgram')
+const fs      = require('node:fs')
 const ThrTime = require('./lib/thrtime.js')
 const osc     = require('simple-osc-lib')
 
@@ -39,9 +40,9 @@ oscIN.bind(dataStack.settings.receive.port, '0.0.0.0')
 
 const createWindow = () => {
 	mainWindow = new BrowserWindow({
-		height : 800,
+		height : 650,
 		title  : 'TheaterTime',
-		width  : 1000,
+		width  : 900,
 
 		webPreferences : {
 			preload :  path.join(__dirname, 'preload.js'),
@@ -58,6 +59,8 @@ const createWindow = () => {
 const outputConfig = () => { mainWindow.webContents.send('config', dataStack.config) }
 const outputStatus = () => { mainWindow.webContents.send('status', dataStack.status) }
 const outputUpdate = () => { mainWindow.webContents.send('update', dataStack.update) }
+const outputLogger = () => { mainWindow.webContents.send('log',    dataStack.log) }
+const configChange = () => { outputConfig(); outputStatus() }
 
 app.whenReady().then(() => {
 	ipcMain.on('config', outputConfig)
@@ -66,11 +69,11 @@ app.whenReady().then(() => {
 	ipcMain.on('switch:save', (_, data) => {
 		dataStack.toggle.clear()
 		dataStack.toggle.add_stack(data)
-		outputConfig()
+		configChange()
 	})
 	ipcMain.on('switch:remove', (_, index) => {
 		dataStack.toggle.remove(index)
-		outputConfig()
+		configChange()
 	})
 	ipcMain.on('switch:toggle', (_, index) => {
 		dataStack.toggleSwitch(index)
@@ -80,11 +83,11 @@ app.whenReady().then(() => {
 	ipcMain.on('timer:save', (_, data) => {
 		dataStack.timers.clear()
 		dataStack.timers.add_stack(data)
-		outputConfig()
+		configChange()
 	})
 	ipcMain.on('timer:remove', (_, index) => {
 		dataStack.timers.remove(index)
-		outputConfig()
+		configChange()
 	})
 	ipcMain.on('timer:next', () => {
 		dataStack.next_timer()
@@ -103,6 +106,7 @@ app.whenReady().then(() => {
 	setInterval(outputUpdate, 1000)
 	setInterval(oscActiveTimer, 500)
 	setInterval(oscToggle, 5000)
+	setInterval(outputLogger, 30000)
 
 	// On OS X it's common to re-create a window in the app when the
 	// dock icon is clicked and there are no other windows open.
@@ -135,14 +139,52 @@ const template = [
 			{
 				label : 'New',
 				submenu : [
-					{ label : 'New Blank Config', click : () => { dataStack.defaultEmpty() } },
-					{ label : 'New from Rehearsal Template', click : () => { dataStack.defaultRehearsal() } },
-					{ label : 'New from Show Template', click : () => { dataStack.defaultShow() } },
+					{ label : 'New Blank Config', click : () => { dataStack.defaultEmpty(); configChange() } },
+					{ label : 'New from Rehearsal Template', click : () => { dataStack.defaultRehearsal(); configChange() } },
+					{ label : 'New from Show Template', click : () => { dataStack.defaultShow(); configChange() } },
 				],
 			},
 			{ type : 'separator' },
-			{ label : 'Save Configuration', click : () => {} },
-			{ label : 'Load Configuration', click : () => {} },
+			{ label : 'Save Configuration', click : () => {
+				dialog.showSaveDialog(mainWindow, {
+					defaultPath : app.getPath('desktop'),
+					filters     : [{ name : 'ThrTime Files', extensions : ['ttime'] }],
+				}).then(async (result) => {
+					if ( !result.canceled ) {
+						try {
+							
+							fs.writeFileSync(result.filePath, JSON.stringify(dataStack.config, null, 2))
+							app.addRecentDocument(result.filePath)
+						} catch (err) {
+							dataStack.log.push(err)
+						}
+					}
+				}).catch((err) => {
+					dataStack.log.push(err)
+				})
+			} },
+			{ label : 'Load Configuration', click : () => {
+				const options = {
+					properties  : ['openFile'],
+					defaultPath : app.getPath('desktop'),
+					filters     : [{ name : 'ThrTime Files', extensions : ['ttime'] }],
+				}
+
+				dialog.showOpenDialog(mainWindow, options).then((result) => {
+					if ( !result.canceled ) {
+						try {
+							const fileRaw  = fs.readFileSync(result.filePaths[0])
+							const fileJSON = JSON.parse(fileRaw)
+							dataStack.config = fileJSON
+							configChange()
+						} catch (err) {
+							dataStack.log.push(err)
+						}
+					}
+				}).catch((err) => {
+					dataStack.log.push(err)
+				})
+			} },
 			{ type : 'separator' },
 			isMac ? { role : 'close' } : { role : 'quit' }
 		],
@@ -221,10 +263,11 @@ function oscSend(buffer) {
 
 function oscActiveTimer() {
 	if ( dataStack.settings.send.active ) {
-		const timer = dataStack.timers.current
-		const forceEmpty = dataStack.settings.send.blink && ( timer.type !== 1 && timer.wholeSeconds < 0 && timer.wholeSeconds % 3 === 0 )
+		const timer = dataStack.timers.osc
 
 		if ( timer === null ) { return }
+
+		const forceEmpty = dataStack.settings.send.blink && ( timer.type !== 1 && timer.wholeSeconds < 0 && timer.wholeSeconds % 3 === 0 )
 
 		oscSend(oscLib
 			.messageBuilder('/theaterTime/currentTimer')
@@ -237,6 +280,7 @@ function oscActiveTimer() {
 }
 
 function oscToggle() {
+	if ( dataStack.toggle.config.length === 0 ) { return }
 	// Old way of sending.
 	if ( dataStack.settings.send.switch ) {
 		oscSend(oscLib.buildBundle({

@@ -106,8 +106,10 @@ class DataStack {
 
 	next_timer() {
 		this.timers.next()
-		for ( const reset of this.timers.current.reset_switches ) {
-			this.toggle.force_off(reset)
+		if ( Array.isArray(this.timers.current.reset_switches) ) {
+			for ( const reset of this.timers.current.reset_switches ) {
+				this.toggle.force_off(reset)
+			}
 		}
 	}
 

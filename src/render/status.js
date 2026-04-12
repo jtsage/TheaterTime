@@ -59,6 +59,10 @@ window.ipc.receive('update', (data) => {
 	}
 })
 
+window.ipc.receive('log', (data) => {
+	document.getElementById('log').innerText = data
+})
+
 window.ipc.receive('status', (data) => {
 	document.getElementById('status-toggle').innerHTML = data.toggle.flatMap((toggle, index) => StatusSwitch(toggle, index)).join('\n')
 	document.getElementById('status-timer').innerHTML  = data.timers.flatMap((timer) => StatusTimer(timer)).join('\n')

@@ -107,7 +107,13 @@ class TimerStack {
 
 	get current() {
 		return this.#init ?
-			this.#stack[this.current_timer].osc :
+			this.#stack[this.current_timer]?.serialize || null :
+			null
+	}
+
+	get osc() {
+		return this.#init ?
+			this.#stack[this.current_timer]?.osc || null :
 			null
 	}
 
@@ -214,7 +220,7 @@ class TimerSTD {
 		switch ( time ) {
 			case 1800 : return 'Thirty Minutes Please.  Thirty Minutes.'
 			case 1200 : return 'Twenty Minutes Please.  Twenty Minutes.'
-			case 900  : return '15 Minutes Please.  15 Minutes.'
+			case 900  : return 'Fif-teen Minutes Please.  Fif-teen Minutes.'
 			case 600  : return 'Ten Minutes Please.  Ten Minutes.'
 			case 300  : return 'Five Minutes Please.  Five Minutes.'
 			default   : return null

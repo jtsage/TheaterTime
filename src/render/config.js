@@ -57,9 +57,6 @@ const TimerType = Object.freeze({
 })
 
 window.ipc.receive('config', (data) => {
-	// eslint-disable-next-line no-console
-	console.log(data)
-
 	updateConfig(data.settings)
 	winStatus.dirty = false
 	winStatus.timerCount = data.timers.length
@@ -103,6 +100,8 @@ window.ipc.receive('config', (data) => {
 				break
 		}
 	}
+	document.getElementById('click-add-switch').classList.remove('d-none')
+	document.getElementById('click-add-timer').classList.remove('d-none')
 })
 
 

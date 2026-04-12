@@ -30,6 +30,7 @@ contextBridge.exposeInMainWorld(
 				'config',
 				'status',
 				'update',
+				'log',
 			])
 		
 			if ( validChannels.has( channel ) ) {
