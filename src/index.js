@@ -4,7 +4,7 @@
     |_| |_|_|\___.<___| |_| \___.|_|  |_| |_||_|_|_|\___.
 	(c) 2026 J.T.Sage - MIT License
 */
-const debug = true
+
 
 const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron')
 const path    = require('node:path')
@@ -12,6 +12,8 @@ const dgram   = require('node:dgram')
 const fs      = require('node:fs')
 const ThrTime = require('./lib/thrtime.js')
 const osc     = require('simple-osc-lib')
+
+const debug = !app.isPackaged && true
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { app.quit() }
