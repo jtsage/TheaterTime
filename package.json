@@ -1,8 +1,8 @@
 {
   "name": "theatertime",
-  "productName": "theatertime",
+  "productName": "TheaterTime",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "TheaterTime OSC Timer",
   "main": "src/index.js",
   "private": true,
   "scripts": {

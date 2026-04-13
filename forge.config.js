@@ -7,6 +7,14 @@ module.exports = {
 		asar            : true,
 		icon            : 'icon/icon',
 		name            : 'TheaterTime',
+
+		ignore : [
+			/^\/s_shot/,
+			/^\/\.vscode/,
+			/^\/\.gitignore/,
+			/^\/eslint.config.mjs/,
+			/^\/README.md/,
+		],
 	},
 	rebuildConfig : {},
 
