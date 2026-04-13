@@ -9,6 +9,7 @@ This is a simple timer that can keep track of a theater performance (or really a
 ![Basic Show](s_shot/app.png)
 ![Basic Rehearsal](s_shot/app2.png)
 ![OSC Output](s_shot/output.png)
+![Vor Sample](s_shot/vor.png)
 
 ## Features
 
@@ -104,3 +105,30 @@ TheaterTime is intended for use with Vor - but it can talk to any application th
 ## License
 
 Do whatever you like with this code. If it might be helpful to others, maybe open a pull request.
+
+## qLab Integration
+
+Most of this is very straightforward - you just need a proper network entry
+
+![qLab](s_shot/qlab.png)
+
+If you wish to use the "speak arbitrary message" function, and would like to have qLab prompt you for the message, you will need 2 cues:
+
+- __SPEAK__ - A network cue pointed to the TheaterTime Patch
+- ___???___ - A script cue with the following script in it:
+
+```applescript
+tell application id "com.figure53.QLab.5" to tell front workspace
+    set prevCommand to notes of cue "SPEAK"
+    if prevCommand is "" then set prevCommand to "Hello"
+
+    display dialog "" default answer prevCommand with title "Text to speak" buttons {"Cancel", "OK"} default button "OK" cancel button "Cancel"
+
+    set theCommand to text returned of result
+
+    set notes of cue "SPEAK" to theCommand
+    set oscCommand to "/theaterTime/speak " & quote & theCommand & quote
+    set parameter values of cue "SPEAK" to {oscCommand}
+    start cue "SPEAK"
+end tell
+```
