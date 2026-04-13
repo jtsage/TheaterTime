@@ -250,23 +250,23 @@ const template = [
 		label   : 'View',
 		submenu : [
 			{ accelerator : 'CommandOrControl+1', label : 'Status', click : () => {
-				safeSend.send('view', 'status-tab')
+				safeSend('view', 'status-tab')
 			} },
 			{ accelerator : 'CommandOrControl+2', label : 'Timer Settings', click : () => {
-				safeSend.send('view', 'timer-tab')
+				safeSend('view', 'timer-tab')
 			} },
 			{ accelerator : 'CommandOrControl+3', label : 'Switch Settings', click : () => {
-				safeSend.send('view', 'toggle-tab')
+				safeSend('view', 'toggle-tab')
 			} },
 			{ accelerator : 'CommandOrControl+4', label : 'General Settings', click : () => {
-				safeSend.send('view', 'config-tab')
+				safeSend('view', 'config-tab')
 			} },
 			{ type : 'separator' },
 			{ accelerator : 'CommandOrControl+L', label : 'Log', click : () => {
-				safeSend.send('view', 'log-tab')
+				safeSend('view', 'log-tab')
 			} },
 			{ accelerator : 'CommandOrControl+H', label : 'Help', click : () => {
-				safeSend.send('view', 'help-tab')
+				safeSend('view', 'help-tab')
 			} },
 			...(debug ? [
 				{ type : 'separator' },
