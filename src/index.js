@@ -13,10 +13,14 @@ const fs      = require('node:fs')
 const ThrTime = require('./lib/thrtime.js')
 const osc     = require('simple-osc-lib')
 
-const debug = !app.isPackaged && true
+const debug = !app.isPackaged && false
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { app.quit() }
+
+app.commandLine.appendSwitch('disable-features', 'WebContentsDiscard')
+app.commandLine.appendSwitch('disable-features', 'TabSuspender')
+app.commandLine.appendSwitch('disable-background-timer-throttling')
 
 let mainWindow = null
 
@@ -50,6 +54,7 @@ function openOSCListener() {
 
 const createWindow = () => {
 	mainWindow = new BrowserWindow({
+		backgroundThrottling : false,
 		height : 650,
 		title  : 'TheaterTime',
 		width  : 900,

@@ -106,6 +106,10 @@ TheaterTime is intended for use with Vor - but it can talk to any application th
 
 Do whatever you like with this code. If it might be helpful to others, maybe open a pull request.
 
+## A Note about power saving
+
+Most of the power saving features of chromium (electron renderer) have been disabled for this application.  This is done so that audio announcements play even if TheaterTime is hidden or minimized.  The down side of this is that TheaterTime will always use the CPU, and if you are running it on a laptop, a bit more battery.
+
 ## qLab Integration
 
 Most of this is very straightforward - you just need a proper network entry
