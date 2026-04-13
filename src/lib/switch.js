@@ -209,9 +209,9 @@ const DefaultRehearsal = [
 		reset_switches : null,
 		reverseColor   : false,
 		speak          : 'Wigs and Makeup are now ready.',
-		textActive     : 'Wigs &amp; Makeup ARE Ready',
-		textInactive   : 'Wigs &amp; Makeup are NOT Ready',
-		title          : 'Wigs &amp; Makeup',
+		textActive     : 'Wigs & Makeup ARE Ready',
+		textInactive   : 'Wigs & Makeup are NOT Ready',
+		title          : 'Wigs & Makeup',
 	},
 ]
 

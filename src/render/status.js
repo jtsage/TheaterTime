@@ -27,6 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			audioSystem.utter.voice = voice
 			audioSystem.utter.rate  = 0.8
 			audioSystem.utter.pitch = 0.8
+		} else if ( voice.name === 'Samantha' ) {
+			audioSystem.utter.voice = voice
+			audioSystem.utter.rate  = 0.85
+			audioSystem.utter.pitch = 0.9
 		}
 	}
 

@@ -141,6 +141,12 @@ app.on('window-all-closed', () => {
 	}
 })
 
+app.setAboutPanelOptions({
+	applicationName : 'TheaterTime',
+	applicationVersion : '0.9.9',
+	copyright : 'Copyright © 2026',
+})
+
 // MARK: Main Menu
 const isMac = process.platform === 'darwin'
 const template = [
