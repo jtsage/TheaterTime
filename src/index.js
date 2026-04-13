@@ -66,11 +66,15 @@ const createWindow = () => {
 	}
 }
 
-const outputConfig = () => { mainWindow.webContents.send('config', dataStack.config) }
-const outputStatus = () => { mainWindow.webContents.send('status', dataStack.status) }
-const outputUpdate = () => { mainWindow.webContents.send('update', dataStack.update) }
-const outputLogger = () => { mainWindow.webContents.send('log',    dataStack.log) }
+const outputConfig = () => { safeSend('config', dataStack.config) }
+const outputStatus = () => { safeSend('status', dataStack.status) }
+const outputUpdate = () => { safeSend('update', dataStack.update) }
+const outputLogger = () => { safeSend('log',    dataStack.log) }
 const configChange = () => { outputConfig(); outputStatus() }
+
+function safeSend(id, data) {
+	if ( ! mainWindow.isDestroyed() ) { mainWindow.webContents.send(id, data) }
+}
 
 app.whenReady().then(() => {
 	ipcMain.on('config', outputConfig)
@@ -246,23 +250,23 @@ const template = [
 		label   : 'View',
 		submenu : [
 			{ accelerator : 'CommandOrControl+1', label : 'Status', click : () => {
-				mainWindow.webContents.send('view', 'status-tab')
+				safeSend.send('view', 'status-tab')
 			} },
 			{ accelerator : 'CommandOrControl+2', label : 'Timer Settings', click : () => {
-				mainWindow.webContents.send('view', 'timer-tab')
+				safeSend.send('view', 'timer-tab')
 			} },
 			{ accelerator : 'CommandOrControl+3', label : 'Switch Settings', click : () => {
-				mainWindow.webContents.send('view', 'toggle-tab')
+				safeSend.send('view', 'toggle-tab')
 			} },
 			{ accelerator : 'CommandOrControl+4', label : 'General Settings', click : () => {
-				mainWindow.webContents.send('view', 'config-tab')
+				safeSend.send('view', 'config-tab')
 			} },
 			{ type : 'separator' },
 			{ accelerator : 'CommandOrControl+L', label : 'Log', click : () => {
-				mainWindow.webContents.send('view', 'log-tab')
+				safeSend.send('view', 'log-tab')
 			} },
 			{ accelerator : 'CommandOrControl+H', label : 'Help', click : () => {
-				mainWindow.webContents.send('view', 'help-tab')
+				safeSend.send('view', 'help-tab')
 			} },
 			...(debug ? [
 				{ type : 'separator' },
