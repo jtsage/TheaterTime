@@ -429,7 +429,7 @@ function clientAddTimer() {
 		title            : '',
 		type             : 2,
 	}, winStatus.timerCount, true)
-	thisTimer.querySelector('.action-btn[data-action="save-timer"]').addEventListener('click', () => save_item(false))
+	thisTimer.querySelector('.action-btn[data-action="save-timer"]').addEventListener('click', () => save_item(true))
 	thisTimer.querySelector('.action-btn[data-action="reload"]').addEventListener('click', () => { window.ipc.config() })
 	
 	thisTimer.querySelector('.card').classList.add('bg-primary-subtle')
