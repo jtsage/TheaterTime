@@ -202,18 +202,21 @@ const timer_details = () => {
 				card.querySelector('input[name="target"]').parentElement.classList.add('d-none')
 				card.querySelector('.select-resets').classList.remove('d-none')
 				card.querySelector('.toggle-sound_countdowns').classList.add('d-none')
+				card.querySelector('input[name="sound_extra"]').parentElement.classList.add('d-none')
 				break
 			case '2' : //count-down
 				card.querySelector('input[name="minutes"]').parentElement.classList.add('d-none')
 				card.querySelector('input[name="target"]').parentElement.classList.remove('d-none')
 				card.querySelector('.select-resets').classList.remove('d-none')
 				card.querySelector('.toggle-sound_countdowns').classList.remove('d-none')
+				card.querySelector('input[name="sound_extra"]').parentElement.classList.remove('d-none')
 				break
 			case '3' : //count-minutes
 				card.querySelector('input[name="minutes"]').parentElement.classList.remove('d-none')
 				card.querySelector('input[name="target"]').parentElement.classList.add('d-none')
 				card.querySelector('.select-resets').classList.remove('d-none')
 				card.querySelector('.toggle-sound_countdowns').classList.remove('d-none')
+				card.querySelector('input[name="sound_extra"]').parentElement.classList.remove('d-none')
 				break
 			default :
 				break
@@ -250,6 +253,7 @@ const TimerConfigHTML = (timer, index, create = false) => {
 				trueText   : 'Enabled',
 			}
 		),
+		...HTMLFormText( 'sound_extra', timer.sound_extra, 'Extra Audio', 'Prepend this statement to audio cues played by this timer'),
 
 		'<div class="input-group mb-1">',
 		'<span title="Title of timer" class="input-group-text w-25">Minutes</span>',
@@ -425,6 +429,7 @@ function clientAddTimer() {
 		minutes          : null,
 		reset_switches   : null,
 		sound_countdowns : false,
+		sound_extra      : '',
 		target           : new Date(),
 		title            : '',
 		type             : 2,

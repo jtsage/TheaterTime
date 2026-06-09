@@ -1,7 +1,7 @@
 {
   "name": "theatertime",
   "productName": "TheaterTime",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "TheaterTime OSC Timer",
   "main": "src/index.js",
   "private": true,

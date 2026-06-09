@@ -46,6 +46,7 @@ class TimerStack {
 		title            = null,
 		reset_switches   = null,
 		sound_countdowns = false,
+		sound_extra      = '',
 		target           = null,
 		minutes          = null,
 		type             = TimerType.UNDEFINED,
@@ -55,10 +56,10 @@ class TimerStack {
 				this.#stack.push(new TimerUp(title, reset_switches))
 				break
 			case TimerType.DOWN :
-				this.#stack.push(new TimerDown(title, target, sound_countdowns, reset_switches))
+				this.#stack.push(new TimerDown(title, target, sound_countdowns, reset_switches, sound_extra))
 				break
 			case TimerType.MINUTES :
-				this.#stack.push(new TimerMinutes(title, minutes, sound_countdowns, reset_switches))
+				this.#stack.push(new TimerMinutes(title, minutes, sound_countdowns, reset_switches, sound_extra))
 				break
 			default :
 				break
@@ -145,6 +146,7 @@ class TimerSTD {
 	targetMinutes  = null
 	
 	sound_countdowns = false
+	sound_extra      = ''
 
 	reset_switches = []
 
@@ -208,6 +210,7 @@ class TimerSTD {
 			dateTarget       : this.#dateOrNull(this.targetDateTime),
 			reset_switches   : this.reset_switches,
 			sound_countdowns : this.sound_countdowns,
+			sound_extra      : this.sound_extra,
 			status           : this.status,
 			title            : this.title,
 			type             : this.type,
@@ -218,7 +221,14 @@ class TimerSTD {
 	get osc() { return { type : this.type, title : this.title, ...this.update } }
 	get update() { return { uuid : this.uuid, status : this.status } }
 
-	timeAudio(time) {
+	timeAudio(time, extra) {
+		const timeString = this.#timeAudio(time)
+		return timeString !== null
+			? extra !== '' ? `${extra}. ${timeString}` : timeString
+			: null
+	}
+
+	#timeAudio(time) {
 		switch ( time ) {
 			case 5400 : return 'Hour before half hour please. 90 Minutes.'
 			case 3600 : return 'One Hour Please.  One Hour.'
@@ -236,6 +246,7 @@ class TimerSTD {
 			minutes          : this.type === TimerType.MINUTES ? this.targetMinutes : null,
 			reset_switches   : this.reset_switches,
 			sound_countdowns : this.sound_countdowns,
+			sound_extra      : this.sound_extra,
 			target           : this.type === TimerType.DOWN ? this.targetDateTime   : null,
 			title            : this.title,
 			type             : this.type,
@@ -282,10 +293,11 @@ class TimerUp extends TimerSTD {
 
 // MARK: TimerCountDown
 class TimerMinutes extends TimerSTD {
-	constructor(title, minutes, sound_countdowns = false, reset_switches = null) {
+	constructor(title, minutes, sound_countdowns = false, reset_switches = null, sound_extra = '') {
 		super(title, reset_switches)
 		this.targetMinutes    = minutes
 		this.sound_countdowns = sound_countdowns
+		this.sound_extra      = sound_extra
 		this.type             = TimerType.MINUTES
 	}
 
@@ -325,7 +337,7 @@ class TimerMinutes extends TimerSTD {
 		const dir = this.status === TimerStatus.RUNNING ? '↓ ' : ''
 		return {
 			formatTime   : this.formatTime(dir, time),
-			speak        : this.sound_countdowns ? super.timeAudio(time) : null,
+			speak        : this.sound_countdowns ? super.timeAudio(time, this.sound_extra) : null,
 			wholeSeconds : time,
 			...super.update,
 		}
@@ -334,7 +346,7 @@ class TimerMinutes extends TimerSTD {
 
 // MARK: TimerABSCountDown
 class TimerDown extends TimerSTD {
-	constructor(title, target, sound_countdowns = false, reset_switches = null) {
+	constructor(title, target, sound_countdowns = false, reset_switches = null, sound_extra = '') {
 		super(title, reset_switches)
 
 		if ( target instanceof Date ) {
@@ -343,6 +355,7 @@ class TimerDown extends TimerSTD {
 			this.targetDateTime   = new Date(target)
 		}
 
+		this.sound_extra      = sound_extra
 		this.sound_countdowns = sound_countdowns
 		this.type             = TimerType.DOWN
 
@@ -378,7 +391,9 @@ class TimerDown extends TimerSTD {
 		return {
 			...super.update,
 			formatTime   : this.formatTime(dir, time),
-			speak        : this.sound_countdowns ? super.timeAudio(time) : null,
+			speak        : this.sound_countdowns
+				? super.timeAudio(time, this.sound_extra)
+				: null,
 			wholeSeconds : time,
 		}
 	}

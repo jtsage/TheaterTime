@@ -40,7 +40,7 @@ Timers keep time.  They can track time _until_ an event, or time _elapsed_ in an
 
 Additional options are available on some timers
 
-- __Sound__ : The system will speak `"## Minutes Please.  ## Minutes"` for 90, 60, 30, 20, 15, 10, and 5 minutes remaining.  This setting is unavailable on count-up timers.
+- __Sound__ : The system will speak `"## Minutes Please.  ## Minutes"` for 90, 60, 30, 20, 15, 10, and 5 minutes remaining.  This setting is unavailable on count-up timers. You may specify and additional text to be spoken after the chime and before the generated response.  This is particularly helpful when running multiple shows or events concurrently.
 - __Reset Switch(es)__ : These are the switches that will be set to inactive when this timer is set active.  This setting is available on all timers, but will not function on the _first_ timer.
 - __Minutes__ : The number of minutes to count (plus 2 seconds, so audio plays correctly). This settings is only available on minute count-down type timers.
 - __Target__ : The target DateTime to count-down to.  This setting is only available on count-down type timers.

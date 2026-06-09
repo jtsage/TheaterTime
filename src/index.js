@@ -153,7 +153,7 @@ app.on('window-all-closed', () => {
 
 app.setAboutPanelOptions({
 	applicationName : 'TheaterTime',
-	applicationVersion : '0.9.9',
+	applicationVersion : '1.0.2',
 	copyright : 'Copyright © 2026',
 })
 
