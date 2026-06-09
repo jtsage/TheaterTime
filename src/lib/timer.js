@@ -89,16 +89,17 @@ class TimerStack {
 
 	next() {
 		if ( !this.#init ) { return }
-		this.#stack[this.current_timer].stop()
+		if ( this.current_timer >= this.#stack.length ) { return }
+		this.#stack?.[this.current_timer]?.stop()
 		this.current_timer++
-		if ( this.#stack.length > this.current_timer ) {
+		if ( this.current_timer < this.#stack.length ) {
 			this.#stack[this.current_timer].start()
 		}
 	}
 
 	previous() {
 		if ( !this.#init ) { return }
-		this.#stack[this.current_timer].stop()
+		this.#stack?.[this.current_timer]?.stop()
 		if ( this.current_timer > 0 ) {
 			this.current_timer--
 			this.#stack[this.current_timer].start()
@@ -392,7 +393,7 @@ const today_time = (hour, minute) => {
 	return now
 }
 
-const DefaultShow = [
+const DefaultShow = () => [
 	{
 		minutes          : null,
 		reset_switches   : null,
@@ -427,7 +428,7 @@ const DefaultShow = [
 	},
 ]
 
-const DefaultRehearsal = [
+const DefaultRehearsal = () => [
 	{
 		minutes          : null,
 		reset_switches   : null,
@@ -446,7 +447,7 @@ const DefaultRehearsal = [
 	},
 ]
 
-const DefaultEmpty = [
+const DefaultEmpty = () => [
 	{
 		minutes          : null,
 		reset_switches   : null,

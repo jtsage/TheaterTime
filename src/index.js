@@ -12,6 +12,7 @@ const dgram   = require('node:dgram')
 const fs      = require('node:fs')
 const ThrTime = require('./lib/thrtime.js')
 const osc     = require('simple-osc-lib')
+const appCon  = require('../package.json')
 
 const debug = !app.isPackaged && false
 
@@ -56,7 +57,7 @@ const createWindow = () => {
 	mainWindow = new BrowserWindow({
 		backgroundThrottling : false,
 		height : 650,
-		title  : 'TheaterTime',
+		title  : `${appCon.productName} ${appCon.version}`,
 		width  : 900,
 
 		webPreferences : {

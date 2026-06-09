@@ -33,7 +33,7 @@ class DataStack {
 		this.timers = new Timers.Stack()
 		this.toggle = new Switches.Stack()
 
-		this.timers.add_stack(Timers.DefaultShow)
+		this.timers.add_stack(Timers.DefaultShow())
 		this.toggle.add_stack(Switches.Default)
 	}
 
@@ -47,21 +47,21 @@ class DataStack {
 
 	defaultShow() {
 		this.timers.clear()
-		this.timers.add_stack(Timers.DefaultShow)
+		this.timers.add_stack(Timers.DefaultShow())
 		this.toggle.clear()
 		this.toggle.add_stack(Switches.Default)
 	}
 
 	defaultRehearsal() {
 		this.timers.clear()
-		this.timers.add_stack(Timers.DefaultRehearsal)
+		this.timers.add_stack(Timers.DefaultRehearsal())
 		this.toggle.clear()
 		this.toggle.add_stack(Switches.Rehearsal)
 	}
 
 	defaultEmpty() {
 		this.timers.clear()
-		this.timers.add_stack(Timers.DefaultEmpty)
+		this.timers.add_stack(Timers.DefaultEmpty())
 		this.toggle.clear()
 	}
 
@@ -123,7 +123,7 @@ class DataStack {
 
 	next_timer() {
 		this.timers.next()
-		if ( Array.isArray(this.timers.current.reset_switches) ) {
+		if ( Array.isArray(this.timers.current?.reset_switches) ) {
 			for ( const reset of this.timers.current.reset_switches ) {
 				this.toggle.force_off(reset)
 			}
