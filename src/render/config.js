@@ -206,7 +206,7 @@ const timer_details = () => {
 			case '2' : //count-down
 				card.querySelector('input[name="minutes"]').parentElement.classList.add('d-none')
 				card.querySelector('input[name="target"]').parentElement.classList.remove('d-none')
-				card.querySelector('.select-resets').classList.add('d-none')
+				card.querySelector('.select-resets').classList.remove('d-none')
 				card.querySelector('.toggle-sound_countdowns').classList.remove('d-none')
 				break
 			case '3' : //count-minutes

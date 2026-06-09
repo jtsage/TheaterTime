@@ -69,7 +69,7 @@ window.ipc.receive('log', (data) => {
 
 window.ipc.receive('status', (data) => {
 	document.getElementById('status-toggle').innerHTML = data.toggle.flatMap((toggle, index) => StatusSwitch(toggle, index)).join('\n')
-	document.getElementById('status-timer').innerHTML  = data.timers.flatMap((timer) => StatusTimer(timer)).join('\n')
+	document.getElementById('status-timer').innerHTML  = data.timers.flatMap((timer, index) => StatusTimer(timer, index === data.current_timer)).join('\n')
 
 	for ( const element of document.querySelectorAll('.toggle-status-card')) {
 		element.addEventListener('click', (e) => {
@@ -105,9 +105,10 @@ const ColorTimer = (timer) => {
 	}
 }
 
-const StatusTimer = (timer) => {
+const StatusTimer = (timer, isCurrent) => {
 	return [
 		`<div class="card mb-2 w-100 timer-status-card ${ColorTimer(timer)[0]}">`,
+		isCurrent ? '<div class="text-body-tertiary text-start pe-2 current-icon"><i class="bi bi-arrow-right-circle"></i></div>' : '',
 		`<div class="card-header fw-bold text-center">${timer.title}</div>`,
 		timer.sound_countdowns ? '<div class="text-body-tertiary text-end pe-2 audio-icon"><i class="bi bi-volume-up"></i></div>' : '',
 		'<div class="card-body text-center p-1">',
