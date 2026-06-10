@@ -34,7 +34,7 @@
 			</li>
 		</ul>
 		<div class="tab-content" id="main-tab-content">
-			<div class="tab-pane fade show active" id="status-tab-pane" role="tabpanel" aria-labelledby="status-tab" tabindex="0">
+			<div class="tab-pane fade" id="status-tab-pane" role="tabpanel" aria-labelledby="status-tab" tabindex="0">
 				<h2 class="text-end h3 otherHead border-bottom mb-0">Timer &amp; Switch Status</h2>
 				<div class="row w-100 m-0 g-2">
 					<div class="col-3" id="status-toggle"></div>
@@ -51,18 +51,31 @@
 				<div id="toggle-config" class="w-100 px-2 mt-2"></div>
 				<button type="button" id="click-add-switch" class="btn btn-primary w-75 mb-2 mx-auto d-block">Add Switch</button>
 			</div>
-			<div class="tab-pane fade" id="config-tab-pane" role="tabpanel" aria-labelledby="config-tab" tabindex="0">
+			<div class="tab-pane fade show active" id="config-tab-pane" role="tabpanel" aria-labelledby="config-tab" tabindex="0">
 				<h2 class="text-end h3 otherHead border-bottom mb-0">General Settings</h2>
 				<div class="w-100 px-2 mt-2">
 					<div class="card mb-2">
 						<div class="card-header">General</div>
 						<div class="card-body">
-							<div class="input-group mb-0">
-								<span class="input-group-text w-75">Audio</span>
-								<input type="checkbox" class="btn-check" id="config-audio">
-								<label class="btn btn-outline-primary w-25 rounded-end" for="config-audio">Enabled</label>
-								<div class="form-text text-end pe-2 mt-0 w-100">Allow audio output</div>
+							<div class="input-group mb-2">
+								<span class="input-group-text w-75">Speech Enabled</span>
+								<input type="checkbox" class="btn-check" id="audio-enabled">
+								<label class="btn btn-outline-primary w-25 rounded-end" for="audio-enabled">Enabled</label>
 							</div>
+							<div class="input-group mb-1">
+								<span title="Voice name" class="input-group-text w-25">Speech Voice</span>
+								<select name="audio-name" id="audio-name" class="form-select">
+								</select></div>
+							<div class="input-group mb-2">
+								<label title="Pitch of speech, 0 to 2" for="audio-pitch" class="input-group-text w-25">Speech Pitch</label>
+								<input type="range" class="form-control form-range align-self-center px-2 py-4" id="audio-pitch" min="0" max="2" step="0.01">
+							</div>
+							<div class="input-group mb-2">
+								<label title="Rate of speech, 0.1 to 10" for="audio-rate" class="input-group-text w-25">Speech Rate</label>
+								<input type="range" class="form-control form-range align-self-center px-2 py-4" id="audio-rate" min="0.1" max="10" step="0.05">
+							</div>
+
+							<button type="button" id="click-test-voice" class="btn btn-primary w-75 mb-2 mx-auto d-block">Test Voice (does not save!)</button>
 						</div>
 					</div>
 					<div class="card mb-2">

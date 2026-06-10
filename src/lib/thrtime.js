@@ -5,6 +5,7 @@
 	(c) 2026 J.T.Sage - MIT License
 */
 
+const process  = require('node:process')
 const Timers   = require('./timer.js')
 const Switches = require('./switch.js')
 
@@ -14,7 +15,15 @@ class DataStack {
 	timers      = null
 	toggle      = null
 	settings    = {
-		audio : true,
+		audio   : {
+			enabled : true,
+			name    : process.platform === 'darwin' ? 'Samantha' : 'Microsoft Mark',
+			pitch   : 1.12,
+			rate    : 1.1,
+		},
+		receive : {
+			port : 4488,
+		},
 		send  : {
 			host : '127.0.0.1',
 			port : 4444,
@@ -23,9 +32,6 @@ class DataStack {
 			blink  : true,
 			switch : true,
 			toggle : true,
-		},
-		receive : {
-			port : 4488,
 		},
 	}
 

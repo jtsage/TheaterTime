@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	document.getElementById('click-add-timer').addEventListener('click', () => { clientAddTimer() })
 	document.getElementById('click-add-switch').addEventListener('click', () => { clientAddSwitch() })
 	document.getElementById('click-save-config').addEventListener('click', () => { clientSaveConfig() })
+	document.getElementById('click-test-voice').addEventListener('click', () => { clientTestTalk() })
+	
 
 	for ( const element of document.getElementById('config-tab-pane').querySelectorAll('input') ) {
 		element.addEventListener('change', () => { winStatus.dirty = true })
@@ -373,21 +375,42 @@ const HTMLSelectResets = (selected, skip = null) => {
 
 // MARK: general set
 const updateConfig = (settings) => {
-	document.getElementById('send-host').value = settings.send.host
-	document.getElementById('send-port').value = settings.send.port
-	document.getElementById('send-switch').checked = settings.send.switch
-	document.getElementById('send-toggle').checked = settings.send.toggle
-	document.getElementById('send-active').checked = settings.send.active
-	document.getElementById('send-blink').checked  = settings.send.blink
-	document.getElementById('receive-port').value = settings.receive.port
-	document.getElementById('config-audio').checked = settings.audio
-	audioSystem.enabled = settings.audio
+	document.getElementById('send-host').value       = settings.send.host
+	document.getElementById('send-port').value       = settings.send.port
+	document.getElementById('send-switch').checked   = settings.send.switch
+	document.getElementById('send-toggle').checked   = settings.send.toggle
+	document.getElementById('send-active').checked   = settings.send.active
+	document.getElementById('send-blink').checked    = settings.send.blink
+	document.getElementById('receive-port').value    = settings.receive.port
+	document.getElementById('audio-enabled').checked = settings.audio.enabled
+	document.getElementById('audio-pitch').value     = settings.audio.pitch
+	document.getElementById('audio-rate').value      = settings.audio.rate
+
+	const audioNameSelect = document.getElementById('audio-name')
+	const selectHTML      = []
+	for ( const voice of audioSystem.synth.getVoices() ) {
+		if ( ! voice.lang.startsWith('en-') ) { continue }
+		if ( voice.name === settings.audio.name ) {
+			audioSystem.utter.voice = voice
+		}
+		selectHTML.push(`<option value="${voice.name}" ${settings.audio.name === voice.name ? 'selected' : ''}>${voice.name}</option>`)
+	}
+	audioNameSelect.innerHTML = selectHTML.join('')
+
+	audioSystem.utter.rate  = settings.audio.rate
+	audioSystem.utter.pitch = settings.audio.pitch
+	audioSystem.enabled = settings.audio.enabled
 }
 
 function clientSaveConfig() {
 	winStatus.dirty = false
 	const settings = {
-		audio : document.getElementById('config-audio').checked,
+		audio : {
+			enabled : document.getElementById('audio-enabled').checked,
+			name    : document.getElementById('audio-name').value,
+			pitch   : document.getElementById('audio-pitch').value,
+			rate    : document.getElementById('audio-rate').value,
+		},
 		send : {
 			active : document.getElementById('send-active').checked,
 			blink  : document.getElementById('send-blink').checked,
@@ -403,6 +426,20 @@ function clientSaveConfig() {
 	window.ipc.saveSettings(settings)
 }
 
+
+// MARK: test speech
+function clientTestTalk() {
+	audioSystem.utter.pitch = document.getElementById('audio-pitch').value
+	audioSystem.utter.rate  = document.getElementById('audio-rate').value
+	const newVoice = document.getElementById('audio-name').value
+	for ( const voice of audioSystem.synth.getVoices() ) {
+		if ( voice.name === newVoice ) {
+			audioSystem.utter.voice = voice
+		}
+	}
+	audioSystem.utter.text = 'Testing. Testing. 1. 2. 3.'
+	audioSystem.synth.speak(audioSystem.utter)
+}
 
 // MARK: client buttons
 function clientAddSwitch() {

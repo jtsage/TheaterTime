@@ -18,19 +18,15 @@ const audioSystem = {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-	audioSystem.utter.rate = 1.2
-	audioSystem.utter.pitch = 1.2
+	audioSystem.utter.rate = 1.1
+	audioSystem.utter.pitch = 1.12
 	audioSystem.utter.onend = () => { audioSystem.blocked = false }
 
 	for ( const voice of audioSystem.synth.getVoices() ) {
 		if ( voice.name.startsWith('Microsoft Mark') ) {
 			audioSystem.utter.voice = voice
-			audioSystem.utter.rate  = 0.8
-			audioSystem.utter.pitch = 0.8
 		} else if ( voice.name === 'Samantha' ) {
 			audioSystem.utter.voice = voice
-			audioSystem.utter.rate  = 0.85
-			audioSystem.utter.pitch = 0.9
 		}
 	}
 
