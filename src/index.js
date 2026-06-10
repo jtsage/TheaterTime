@@ -16,6 +16,9 @@ const appCon  = require('../package.json')
 
 const debug = !app.isPackaged && false
 
+const autoSavePath = path.join(app.getPath('userData'), 'config')
+const autoSaveFile = path.join(autoSavePath, 'autosave.json')
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { app.quit() }
 
@@ -26,6 +29,16 @@ app.commandLine.appendSwitch('disable-background-timer-throttling')
 let mainWindow = null
 
 const dataStack = new ThrTime.Stack()
+
+if ( fs.existsSync(autoSaveFile) ) {
+	try {
+		const fileRaw  = fs.readFileSync(autoSaveFile)
+		const fileJSON = JSON.parse(fileRaw)
+		dataStack.config = fileJSON
+	} catch (err) {
+		dataStack.log.push(err)
+	}
+}
 
 let   oscIN  = null
 const oscOUT = dgram.createSocket({type : 'udp4', reuseAddr : true})
@@ -151,6 +164,23 @@ app.on('window-all-closed', () => {
 	}
 })
 
+app.on('before-quit', () => {
+	if ( ! fs.existsSync(autoSavePath) ) {
+		try {
+			fs.mkdirSync(autoSavePath)
+		} catch (err) {
+			// eslint-disable-next-line no-console
+			console.log(`AutoSave Failed (Folder) - ${err}`)
+		}
+	}
+	try {
+		fs.writeFileSync(autoSaveFile, JSON.stringify(dataStack.config, null, 2))
+	} catch (err) {
+		// eslint-disable-next-line no-console
+		console.log(`AutoSave Failed (File) - ${err}`)
+	}
+})
+
 app.setAboutPanelOptions({
 	applicationName : 'TheaterTime',
 	applicationVersion : '1.0.2',
@@ -183,7 +213,6 @@ const template = [
 				}).then(async (result) => {
 					if ( !result.canceled ) {
 						try {
-							
 							fs.writeFileSync(result.filePath, JSON.stringify(dataStack.config, null, 2))
 							app.addRecentDocument(result.filePath)
 						} catch (err) {
@@ -249,6 +278,11 @@ const template = [
 			{ label : 'Reset All', click : () => {
 				dataStack.reset_all()
 				outputStatus()
+			} },
+			{ type : 'separator' },
+			{ label : 'Set Target to TODAY', click : () => {
+				dataStack.timers.force_today()
+				outputConfig()
 			} },
 		],
 	},

@@ -107,6 +107,23 @@ class TimerStack {
 		}
 	}
 
+	force_today() {
+		const today = new Date()
+		for (const timer of this.#stack) {
+			if ( timer.type === TimerType.DOWN ) {
+				timer.targetDateTime = new Date(
+					today.getFullYear(),
+					today.getMonth(),
+					today.getDate(),
+					timer.targetDateTime.getHours(),
+					timer.targetDateTime.getMinutes(),
+					0,
+					0
+				)
+			}
+		}
+	}
+
 	get current() {
 		return this.#init ?
 			this.#stack[this.current_timer]?.serialize || null :
