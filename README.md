@@ -119,6 +119,8 @@ Most of this is very straightforward - you just need a proper network entry
 
 __OR__ you can use the `.qlabnetwork` file included in the project repository (`qlab` folder).  It goes in `Applications/Qlab.app/Content/Resources/NetworkDeviceDescriptions`
 
+![qLab](s_shot/qlab2.png)
+
 If you wish to use the "speak arbitrary message" function, and would like to have qLab prompt you for the message, you will need 2 cues:
 
 - __SPEAK__ - A network cue pointed to the TheaterTime Patch
