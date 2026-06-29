@@ -1,0 +1,92 @@
+{
+	"identifier": "com.theatertime.1",
+	"displayName": "TheaterTime",
+	"grouping": "Communications",
+	"api": 1,
+	"messageType": "OSC",
+	"network": [
+		{
+			"transport": "UDP",
+			"defaultPort": 4488,
+			"canEditPort": true
+		}
+	],
+	"parameters": [
+		{
+			"key": "message",
+			"displayName": "Message",
+			"type": "menu",
+			"values": [
+				{ "Next Timer": "/timer/next" },
+				{ "Previous Timer": "/timer/previous" },
+				{ "Stop Timers": "/timer/stop" },
+				"---",
+				{ "Toggle": "/switch/toggle" },
+				{ "Switch On": "/switch/on" },
+				{ "Switch Off": "/switch/off" },
+				"---",
+				{ "Reset All": "/reset" },
+				"---",
+				{ "Speak String": "/speak" },
+				"---",
+				{ "Custom message": "custom" }
+			],
+			"defaultValue": "/timer/next"
+		},
+		{
+			"key": "prefix",
+			"type": "string",
+			"defaultValue": "/theaterTime",
+			"pattern": ".*",
+			"hidden": true
+		}
+	],
+	"conditions": [
+		{
+			"predicate": "message in { '/timer/next', '/timer/previous', '/timer/stop', '/reset' }",
+			"template" : "{prefix}{message}",
+		},
+		{
+			"predicate": "message in { '/switch/toggle', '/switch/on', '/switch/off' }",
+			"template": "{prefix}{message} {switch}",
+			"parameters": [
+				{
+					"key": "switch",
+					"displayName": "Switch ID",
+					"type": "scalar",
+					"width": 150,
+					"fadeable": false,
+					"minimum": 1,
+					"maximum": 255,
+					"precision": 0,
+					"defaultValue": 1
+				}
+			]
+		},
+		{
+			"predicate": "message in { '/speak' }",
+			"template": "{prefix}{message} \"{words}\"",
+			"parameters": [
+				{
+					"key": "words",
+					"displayName": "String to Speak",
+					"type": "string",
+					"width": 250,
+					"fadeable": false
+				}
+			]
+		},
+		{
+			"predicate": "message == 'custom'",
+			"template": "{custom}",
+			"parameters": [
+				{
+					"key": "custom",
+					"displayName": "Custom OSC",
+					"type": "string",
+					"fadeable": true
+				}
+			]
+		}
+	]
+}

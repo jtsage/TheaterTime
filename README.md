@@ -117,10 +117,14 @@ Most of this is very straightforward - you just need a proper network entry
 
 ![qLab](s_shot/qlab.png)
 
+__OR__ you can use the `.qlabnetwork` file included in the project repository (`qlab` folder).  It goes in `Applications/Qlab.app/Content/Resources/NetworkDeviceDescriptions`
+
 If you wish to use the "speak arbitrary message" function, and would like to have qLab prompt you for the message, you will need 2 cues:
 
 - __SPEAK__ - A network cue pointed to the TheaterTime Patch
 - ___???___ - A script cue with the following script in it:
+
+### standard OSC network definition
 
 ```applescript
 tell application id "com.figure53.QLab.5" to tell front workspace
@@ -134,6 +138,23 @@ tell application id "com.figure53.QLab.5" to tell front workspace
     set notes of cue "SPEAK" to theCommand
     set oscCommand to "/theaterTime/speak " & quote & theCommand & quote
     set parameter values of cue "SPEAK" to {oscCommand}
+    start cue "SPEAK"
+end tell
+```
+
+### included custom network configuration
+
+```applescript
+tell application id "com.figure53.QLab.5" to tell front workspace
+    set prevCommand to notes of cue "SPEAK"
+    if prevCommand is "" then set prevCommand to "Hello"
+
+    display dialog "" default answer prevCommand with title "Text to speak" buttons {"Cancel", "OK"} default button "OK" cancel button "Cancel"
+
+    set theCommand to text returned of result
+
+    set notes of cue "SPEAK" to theCommand
+    set parameter values of cue "SPEAK" to {"/speak", theCommand}
     start cue "SPEAK"
 end tell
 ```
