@@ -32,9 +32,9 @@ const dataStack = new ThrTime.Stack()
 
 if ( fs.existsSync(autoSaveFile) ) {
 	try {
-		const fileRaw  = fs.readFileSync(autoSaveFile)
-		const fileJSON = JSON.parse(fileRaw)
-		dataStack.config = fileJSON
+		const fileRaw       = fs.readFileSync(autoSaveFile)
+		const fileJSON      = JSON.parse(fileRaw)
+		dataStack.safe_load = fileJSON
 	} catch (err) {
 		dataStack.log.push(err)
 	}
@@ -139,6 +139,19 @@ app.whenReady().then(() => {
 		outputConfig()
 	})
 
+	ipcMain.on('config:load_drop', (_, file) => {
+		try {
+			const fileRaw       = fs.readFileSync(file)
+			const fileJSON      = JSON.parse(fileRaw)
+			dataStack.safe_load = fileJSON
+			oscIN.close()
+			openOSCListener()
+			configChange()
+		} catch (err) {
+			dataStack.log.push(err)
+		}
+	})
+
 	createWindow()
 
 	setInterval(outputUpdate, 1000)
@@ -235,7 +248,7 @@ const template = [
 						try {
 							const fileRaw  = fs.readFileSync(result.filePaths[0])
 							const fileJSON = JSON.parse(fileRaw)
-							dataStack.config = fileJSON
+							dataStack.safe_load = fileJSON
 							oscIN.close()
 							openOSCListener()
 							configChange()

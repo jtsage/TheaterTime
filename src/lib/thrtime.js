@@ -9,31 +9,33 @@ const process  = require('node:process')
 const Timers   = require('./timer.js')
 const Switches = require('./switch.js')
 
+const DataDefaultSettings = {
+	audio   : {
+		enabled : true,
+		name    : process.platform === 'darwin' ? 'Samantha' : 'Microsoft Mark',
+		pitch   : 1.12,
+		rate    : 1.1,
+	},
+	receive : {
+		port : 4488,
+	},
+	send  : {
+		host : '127.0.0.1',
+		port : 4444,
+
+		active : true,
+		blink  : true,
+		switch : true,
+		toggle : true,
+	},
+}
+
 class DataStack {
 	speakStack  = []
 	log         = []
 	timers      = null
 	toggle      = null
-	settings    = {
-		audio   : {
-			enabled : true,
-			name    : process.platform === 'darwin' ? 'Samantha' : 'Microsoft Mark',
-			pitch   : 1.12,
-			rate    : 1.1,
-		},
-		receive : {
-			port : 4488,
-		},
-		send  : {
-			host : '127.0.0.1',
-			port : 4444,
-
-			active : true,
-			blink  : true,
-			switch : true,
-			toggle : true,
-		},
-	}
+	settings    = DataDefaultSettings
 
 	constructor() {
 		this.timers = new Timers.Stack()
@@ -138,6 +140,29 @@ class DataStack {
 
 	saveSettings(settings) {
 		this.settings = settings
+	}
+
+	set safe_load(newConfig) {
+		for (const key of Object.keys(DataDefaultSettings.audio)) {
+			if ( ! Object.hasOwn(newConfig, key) ) {
+				newConfig[key] = DataDefaultSettings.audio[key]
+			}
+		}
+		for (const key of Object.keys(DataDefaultSettings.receive)) {
+			if ( ! Object.hasOwn(newConfig, key) ) {
+				newConfig[key] = DataDefaultSettings.receive[key]
+			}
+		}
+		for (const key of Object.keys(DataDefaultSettings.send)) {
+			if ( ! Object.hasOwn(newConfig, key) ) {
+				newConfig[key] = DataDefaultSettings.send[key]
+			}
+		}
+		this.settings = newConfig.settings
+		this.timers.clear()
+		this.timers.add_stack(newConfig.timers)
+		this.toggle.clear()
+		this.toggle.add_stack(newConfig.toggle)
 	}
 }
 

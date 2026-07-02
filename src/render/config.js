@@ -483,3 +483,42 @@ function clientAddTimer() {
 	document.getElementById('timer-config').append(thisTimer)
 	timer_details()
 }
+
+// MARK: Drag-n-Drop
+
+document.addEventListener('DOMContentLoaded', () => {
+	const dragTarget = document.getElementById('main-tab-content')
+
+	dragTarget.addEventListener('dragover', (ev) => {
+		ev.preventDefault()
+	})
+	dragTarget.addEventListener('dragenter', (ev) => {
+		if  (ev.target === dragTarget) {
+			dragTarget.classList.add('bg-primary-subtle')
+		}
+	})
+	dragTarget.addEventListener('dragleave', (ev) => {
+		if (ev.relatedTarget === null ) {
+			dragTarget.classList.remove('bg-primary-subtle')
+		}
+	})
+	dragTarget.addEventListener('drop', (ev) => {
+		ev.preventDefault()
+		dragTarget.classList.remove('bg-primary-subtle')
+
+		const files = event.dataTransfer.files
+
+		let bg_class = 'bg-danger-subtle'
+
+		if (files.length !== 0) {
+			const file = files[0] // Access the first dropped file
+			if ( file.type === 'application/json' ) {
+				bg_class = 'bg-success-subtle'
+				window.ipc.loadConfig(window.ipc.getFilePath(file))
+			}
+			
+		}
+		dragTarget.classList.add(bg_class)
+		setTimeout(() => { dragTarget.classList.remove(bg_class) }, 1000)
+	})
+})

@@ -19,6 +19,7 @@ This is a simple timer that can keep track of a theater performance (or really a
 - Toggle switches that can optionally be tied to timers (places, house open, etc)
 - Audio feedback on the main process for switches and countdown timers ("10 Minutes, please"; "This is your places call")
 - Configuration auto save with an easy option to update all timers to reference "today"
+- Configuration save to file / load from file. Drag-and-drop supported.
 
 ## Switches
 

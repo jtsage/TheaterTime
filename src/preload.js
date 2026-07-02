@@ -6,7 +6,7 @@
 */
 // preload file.  all windows.
 
-const {contextBridge, ipcRenderer } = require('electron')
+const {contextBridge, ipcRenderer, webUtils } = require('electron')
 
 contextBridge.exposeInMainWorld(
 	'ipc', {
@@ -21,6 +21,9 @@ contextBridge.exposeInMainWorld(
 		saveTimer    : (data) => ipcRenderer.send('timer:save', data),
 		toggleSwitch : (index) => ipcRenderer.send('switch:toggle', index),
 		updateLog    : () => ipcRenderer.send('log'),
+
+		getFilePath  : (file) => webUtils.getPathForFile(file),
+		loadConfig   : (file) => ipcRenderer.send('config:load_drop', file),
 
 		receive   : ( channel, func ) => {
 			const validChannels = new Set([
