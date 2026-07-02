@@ -118,7 +118,7 @@ Most of this is very straightforward - you just need a proper network entry
 
 ![qLab](s_shot/qlab.png)
 
-__OR__ you can use the `.qlabnetwork` file included in the project repository (`qlab` folder).  It goes in `Applications/Qlab.app/Content/Resources/NetworkDeviceDescriptions`
+__OR__ you can use the `.qlabnetwork` file included in the project repository (`qlab` folder).  It goes in `~/Library/Application Support/Qlab/Network Library/`
 
 ![qLab](s_shot/qlab2.png)
 
