@@ -23,6 +23,13 @@ document.addEventListener('DOMContentLoaded', () => {
 	for ( const element of document.getElementById('config-tab-pane').querySelectorAll('input') ) {
 		element.addEventListener('change', () => { winStatus.dirty = true })
 	}
+	document.getElementById('send-combo').addEventListener('change', () => {
+		if ( document.getElementById('send-combo').validity.valid ) {
+			document.getElementById('click-save-config').disabled = false
+		} else {
+			document.getElementById('click-save-config').disabled = true
+		}
+	})
 	
 	document.getElementById('discard-button').addEventListener('click', () => {
 		window.ipc.config()
@@ -375,8 +382,9 @@ const HTMLSelectResets = (selected, skip = null) => {
 
 // MARK: general set
 const updateConfig = (settings) => {
-	document.getElementById('send-host').value       = settings.send.host
-	document.getElementById('send-port').value       = settings.send.port
+	// document.getElementById('send-host').value       = settings.send.host
+	// document.getElementById('send-port').value       = settings.send.port
+	document.getElementById('send-combo').value      = settings.send.combo
 	document.getElementById('send-switch').checked   = settings.send.switch
 	document.getElementById('send-toggle').checked   = settings.send.toggle
 	document.getElementById('send-active').checked   = settings.send.active
@@ -414,8 +422,9 @@ function clientSaveConfig() {
 		send : {
 			active : document.getElementById('send-active').checked,
 			blink  : document.getElementById('send-blink').checked,
-			host   : document.getElementById('send-host').value,
-			port   : document.getElementById('send-port').value,
+			combo  : document.getElementById('send-combo').value,
+			// host   : document.getElementById('send-host').value,
+			// port   : document.getElementById('send-port').value,
 			switch : document.getElementById('send-switch').checked,
 			toggle : document.getElementById('send-toggle').checked,
 		},

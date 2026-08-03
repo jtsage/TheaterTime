@@ -83,6 +83,9 @@ TheaterTime is intended for use with Vor - but it can talk to any application th
   - `/theaterTime/switch/01 [s:"House"] [s:"House is NOT Open"] [i:0]`
 - __Active Example__
   - `/theaterTime/switch/01 [s:"House"] [s:"House is OPEN"] [i:1]`
+- __EOS Variant__
+  - `/theaterTimer/EOSswitch/01 [s:Active/Inactive Text]`
+  - `/theaterTimer/EOSswitch/01 [s:"House is OPEN"]`
 
 ### Switch Toggle
 
@@ -103,6 +106,9 @@ TheaterTime is intended for use with Vor - but it can talk to any application th
   - `/theaterTime/currentTimer [i:-2141] [s:"Pre-Show"] [s:"↓ + 00:35:41"]`
 - __Blink Example__
   - `/theaterTime/currentTimer [i:-2187] [s:""] [s:""]`
+- __EOS Variant__
+  - `/theaterTimer/EOSTimer [s:Title - Time String]`
+  - `/theaterTime/EOSTime [s:"Pre-Show - ↓ - 05:26:47]`
 
 ## License
 

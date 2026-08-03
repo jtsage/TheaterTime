@@ -82,12 +82,9 @@
 						<div class="card-header">Output</div>
 						<div class="card-body">
 							<div class="input-group mb-2">
-								<span class="input-group-text w-25">Output IP</span>
-								<input type="text" class="form-control" id="send-host">
-							</div>
-							<div class="input-group mb-3">
-								<span class="input-group-text w-25">Output Port</span>
-								<input type="number" min="1025" max="65500" step="1" class="form-control" id="send-port">
+								<span class="input-group-text w-25">Output IP:Port,IP:Port</span>
+								<input type="text" class="form-control" pattern="[0-9.:,]{6,100}" id="send-combo">
+								<div class="form-text text-end pe-2 mt-0 w-100">Ex: 127.0.0.1:4444,192.168.10.10:8000 (no spaces)</div>
 							</div>
 							<div class="input-group mb-3">
 								<span class="input-group-text w-75">Switches</span>

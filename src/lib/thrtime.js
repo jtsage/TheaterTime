@@ -20,8 +20,10 @@ const DataDefaultSettings = {
 		port : 4488,
 	},
 	send  : {
+		combo : '127.0.0.1:4444,192.168.10.180:8000',
 		host : '127.0.0.1',
 		port : 4444,
+		
 
 		active : true,
 		blink  : true,
@@ -145,17 +147,17 @@ class DataStack {
 	set safe_load(newConfig) {
 		for (const key of Object.keys(DataDefaultSettings.audio)) {
 			if ( ! Object.hasOwn(newConfig, key) ) {
-				newConfig[key] = DataDefaultSettings.audio[key]
+				newConfig.settings.audio[key] = DataDefaultSettings.audio[key]
 			}
 		}
 		for (const key of Object.keys(DataDefaultSettings.receive)) {
 			if ( ! Object.hasOwn(newConfig, key) ) {
-				newConfig[key] = DataDefaultSettings.receive[key]
+				newConfig.settings.receive[key] = DataDefaultSettings.receive[key]
 			}
 		}
 		for (const key of Object.keys(DataDefaultSettings.send)) {
 			if ( ! Object.hasOwn(newConfig, key) ) {
-				newConfig[key] = DataDefaultSettings.send[key]
+				newConfig.settings.send[key] = DataDefaultSettings.send[key]
 			}
 		}
 		this.settings = newConfig.settings

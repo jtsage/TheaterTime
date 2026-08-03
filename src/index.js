@@ -393,7 +393,16 @@ function doOSC(packet) {
 
 // MARK: OSC (send)
 function oscSend(buffer) {
-	oscOUT.send(buffer, 0, buffer.length, dataStack.settings.send.port, dataStack.settings.send.host)
+	for ( const paired of dataStack.settings.send.combo.split(',') ) {
+		const parts = paired.split(':')
+		try {
+			oscOUT.send(buffer, 0, buffer.length, parts[1] ?? 4444, parts[0])
+		} catch (err) {
+			dataStack.log.push(`invalid sending to '${parts[0]}', port '${parts[1]}' -- ${err}\n`)
+		}
+	}
+	// Depreciated Setting Method
+	// oscOUT.send(buffer, 0, buffer.length, dataStack.settings.send.port, dataStack.settings.send.host)
 }
 
 function oscActiveTimer() {
@@ -409,6 +418,11 @@ function oscActiveTimer() {
 			.integer(timer.wholeSeconds)
 			.string(forceEmpty ? '' : timer.title)
 			.string(forceEmpty ? '' : timer.formatTime)
+			.toBuffer()
+		)
+		oscSend(oscLib
+			.messageBuilder('/theaterTime/EOSTimer')
+			.string(`${timer.title} - ${timer.formatTime}`)
 			.toBuffer()
 		)
 	}
@@ -428,6 +442,13 @@ function oscToggle() {
 				.toBuffer()
 			),
 		}))
+		dataStack.toggle.all.map((element, index) => {
+			oscSend(oscLib
+				.messageBuilder(`/theaterTime/EOSswitch/${(index+1).toString().padStart(2, '0')}`)
+				.string(element.status === 1 ? element.textActive : element.textInactive)
+				.toBuffer()
+			)
+		})
 	}
 
 	// New way of sending
