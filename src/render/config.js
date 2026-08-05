@@ -26,8 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	document.getElementById('send-combo').addEventListener('change', () => {
 		if ( document.getElementById('send-combo').validity.valid ) {
 			document.getElementById('click-save-config').disabled = false
+			document.getElementById('send-combo-error').classList.add('d-none')
 		} else {
 			document.getElementById('click-save-config').disabled = true
+			document.getElementById('send-combo-error').classList.remove('d-none')
 		}
 	})
 	
@@ -382,17 +384,16 @@ const HTMLSelectResets = (selected, skip = null) => {
 
 // MARK: general set
 const updateConfig = (settings) => {
-	// document.getElementById('send-host').value       = settings.send.host
-	// document.getElementById('send-port').value       = settings.send.port
-	document.getElementById('send-combo').value      = settings.send.combo
-	document.getElementById('send-switch').checked   = settings.send.switch
-	document.getElementById('send-toggle').checked   = settings.send.toggle
-	document.getElementById('send-active').checked   = settings.send.active
-	document.getElementById('send-blink').checked    = settings.send.blink
-	document.getElementById('receive-port').value    = settings.receive.port
 	document.getElementById('audio-enabled').checked = settings.audio.enabled
 	document.getElementById('audio-pitch').value     = settings.audio.pitch
 	document.getElementById('audio-rate').value      = settings.audio.rate
+	document.getElementById('receive-port').value    = settings.receive.port
+	document.getElementById('send-active').checked   = settings.send.active
+	document.getElementById('send-blink').checked    = settings.send.blink
+	document.getElementById('send-combo').value      = settings.send.combo
+	document.getElementById('send-eos').checked      = settings.send.eos
+	document.getElementById('send-switch').checked   = settings.send.switch
+	document.getElementById('send-toggle').checked   = settings.send.toggle
 
 	const audioNameSelect = document.getElementById('audio-name')
 	const selectHTML      = []
@@ -423,8 +424,7 @@ function clientSaveConfig() {
 			active : document.getElementById('send-active').checked,
 			blink  : document.getElementById('send-blink').checked,
 			combo  : document.getElementById('send-combo').value,
-			// host   : document.getElementById('send-host').value,
-			// port   : document.getElementById('send-port').value,
+			eos    : document.getElementById('send-eos').checked,
 			switch : document.getElementById('send-switch').checked,
 			toggle : document.getElementById('send-toggle').checked,
 		},

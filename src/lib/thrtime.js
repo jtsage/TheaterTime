@@ -20,13 +20,11 @@ const DataDefaultSettings = {
 		port : 4488,
 	},
 	send  : {
-		combo : '127.0.0.1:4444,192.168.10.180:8000',
-		host : '127.0.0.1',
-		port : 4444,
-		
+		combo : '127.0.0.1:4444',
 
 		active : true,
 		blink  : true,
+		eos    : true,
 		switch : true,
 		toggle : true,
 	},
@@ -142,21 +140,33 @@ class DataStack {
 
 	saveSettings(settings) {
 		this.settings = settings
+		this.logOutputPath()
+	}
+
+	logOutputPath() {
+		this.log.push('settings updated.\n')
+		for ( const paired of this.settings.send.combo.split(',') ) {
+			const parts = paired.split(':')
+			this.log.push(`send path added: ${parts[0]}:${parts[1]}\n`)
+		}
 	}
 
 	set safe_load(newConfig) {
 		for (const key of Object.keys(DataDefaultSettings.audio)) {
-			if ( ! Object.hasOwn(newConfig, key) ) {
+			if ( ! Object.hasOwn(newConfig.settings.audio, key) ) {
+				this.log.push(`Default value for audio.${key} used (${DataDefaultSettings.audio[key]})\n`)
 				newConfig.settings.audio[key] = DataDefaultSettings.audio[key]
 			}
 		}
 		for (const key of Object.keys(DataDefaultSettings.receive)) {
-			if ( ! Object.hasOwn(newConfig, key) ) {
+			if ( ! Object.hasOwn(newConfig.settings.receive, key) ) {
+				this.log.push(`Default value for receive.${key} used (${DataDefaultSettings.receive[key]})\n`)
 				newConfig.settings.receive[key] = DataDefaultSettings.receive[key]
 			}
 		}
 		for (const key of Object.keys(DataDefaultSettings.send)) {
-			if ( ! Object.hasOwn(newConfig, key) ) {
+			if ( ! Object.hasOwn(newConfig.settings.send, key) ) {
+				this.log.push(`Default value for send.${key} used (${DataDefaultSettings.send[key]})\n`)
 				newConfig.settings.send[key] = DataDefaultSettings.send[key]
 			}
 		}
@@ -165,6 +175,7 @@ class DataStack {
 		this.timers.add_stack(newConfig.timers)
 		this.toggle.clear()
 		this.toggle.add_stack(newConfig.toggle)
+		this.logOutputPath()
 	}
 }
 

@@ -85,6 +85,7 @@
 								<span class="input-group-text w-25">Output IP:Port,IP:Port</span>
 								<input type="text" class="form-control" pattern="[0-9.:,]{6,100}" id="send-combo">
 								<div class="form-text text-end pe-2 mt-0 w-100">Ex: 127.0.0.1:4444,192.168.10.10:8000 (no spaces)</div>
+								<div id="send-combo-error" class="d-none form-text text-danger text-end pe-2 mt-0 w-100">Only supports digits (0-9), dot (.), colon (:), and comma (,)</div>
 							</div>
 							<div class="input-group mb-3">
 								<span class="input-group-text w-75">Switches</span>
@@ -103,6 +104,12 @@
 								<input type="checkbox" class="btn-check" id="send-active">
 								<label class="btn btn-outline-primary w-25 rounded-end" for="send-active">Enabled</label>
 								<div class="form-text text-end pe-2 mt-0 w-100">Send <code>/theaterTime/currentTimer [int:time] [string:title] [string:time]</code> style messages</div>
+							</div>
+							<div class="input-group mb-3">
+								<span class="input-group-text w-75">EOS Variants</span>
+								<input type="checkbox" class="btn-check" id="send-eos">
+								<label class="btn btn-outline-primary w-25 rounded-end" for="send-eos">Enabled</label>
+								<div class="form-text text-end pe-2 mt-0 w-100">Send <code>/theaterTime/EOSswitch/## [string:active or empty text]</code> and <code>/theaterTime/EOSTimer [string:title and time]</code> style messages</div>
 							</div>
 							<div class="input-group mb-1">
 								<span class="input-group-text w-75">Blink Expired</span>

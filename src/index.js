@@ -130,6 +130,7 @@ app.whenReady().then(() => {
 
 	ipcMain.on('settings', (_, settings) => {
 		dataStack.saveSettings(settings)
+		autoSaveConfig()
 		try {
 			oscIN.close()
 		} catch {
@@ -178,20 +179,7 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', () => {
-	if ( ! fs.existsSync(autoSavePath) ) {
-		try {
-			fs.mkdirSync(autoSavePath)
-		} catch (err) {
-			// eslint-disable-next-line no-console
-			console.log(`AutoSave Failed (Folder) - ${err}`)
-		}
-	}
-	try {
-		fs.writeFileSync(autoSaveFile, JSON.stringify(dataStack.config, null, 2))
-	} catch (err) {
-		// eslint-disable-next-line no-console
-		console.log(`AutoSave Failed (File) - ${err}`)
-	}
+	autoSaveConfig()
 })
 
 app.setAboutPanelOptions({
@@ -390,6 +378,23 @@ function doOSC(packet) {
 }
 
 
+function autoSaveConfig() {
+	if ( ! fs.existsSync(autoSavePath) ) {
+		try {
+			fs.mkdirSync(autoSavePath)
+		} catch (err) {
+			// eslint-disable-next-line no-console
+			console.log(`AutoSave Failed (Folder) - ${err}`)
+		}
+	}
+	try {
+		fs.writeFileSync(autoSaveFile, JSON.stringify(dataStack.config, null, 2))
+	} catch (err) {
+		// eslint-disable-next-line no-console
+		console.log(`AutoSave Failed (File) - ${err}`)
+	}
+}
+
 
 // MARK: OSC (send)
 function oscSend(buffer) {
@@ -401,8 +406,6 @@ function oscSend(buffer) {
 			dataStack.log.push(`invalid sending to '${parts[0]}', port '${parts[1]}' -- ${err}\n`)
 		}
 	}
-	// Depreciated Setting Method
-	// oscOUT.send(buffer, 0, buffer.length, dataStack.settings.send.port, dataStack.settings.send.host)
 }
 
 function oscActiveTimer() {
@@ -420,17 +423,31 @@ function oscActiveTimer() {
 			.string(forceEmpty ? '' : timer.formatTime)
 			.toBuffer()
 		)
-		oscSend(oscLib
-			.messageBuilder('/theaterTime/EOSTimer')
-			.string(`${timer.title} - ${timer.formatTime}`)
-			.toBuffer()
-		)
+		if ( dataStack.settings.send.eos ) {
+			oscSend(oscLib
+				.messageBuilder('/theaterTime/EOSTimer')
+				.string(`${timer.title} :: ${timer.formatTime}`)
+				.toBuffer()
+			)
+		}
 	}
 }
 
 function oscToggle() {
 	if ( dataStack.toggle.config.length === 0 ) { return }
-	// Old way of sending.
+
+	// EOS compatible single-string
+	if ( dataStack.settings.send.eos ) {
+		dataStack.toggle.all.map((element, index) => {
+			oscSend(oscLib
+				.messageBuilder(`/theaterTime/EOSswitch/${(index+1).toString().padStart(2, '0')}`)
+				.string(element.status === 1 ? element.textActive : element.textInactive)
+				.toBuffer()
+			)
+		})
+	}
+
+	// Simple method
 	if ( dataStack.settings.send.switch ) {
 		oscSend(oscLib.buildBundle({
 			timetag  : oscLib.getTimeTagBufferFromDelta(50/1000),
@@ -442,13 +459,6 @@ function oscToggle() {
 				.toBuffer()
 			),
 		}))
-		dataStack.toggle.all.map((element, index) => {
-			oscSend(oscLib
-				.messageBuilder(`/theaterTime/EOSswitch/${(index+1).toString().padStart(2, '0')}`)
-				.string(element.status === 1 ? element.textActive : element.textInactive)
-				.toBuffer()
-			)
-		})
 	}
 
 	// New way of sending
