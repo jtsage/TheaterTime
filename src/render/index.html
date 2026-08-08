@@ -2,13 +2,14 @@
 <html lang="en" data-bs-theme="dark">
 	<head>
 		<meta charset="UTF-8">
-		<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:">
+		<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src * blob:; media-src 'self' blob:; script-src 'self' 'wasm-unsafe-eval'">
 		<link href="inc/bootstrap.min.css" rel="stylesheet" type="text/css">
 		<link href="inc/bootstrap-icons.min.css" rel="stylesheet" type="text/css">
 		<link href="inc/ui.css" rel="stylesheet" type="text/css">
 		<script src="inc/bootstrap.min.js"></script>
 		<script src="config.js"></script>
 		<script src="status.js"></script>
+		<script src="audioSystem.js" type="module"></script>
 	</head>
 
 	<body id="body" class="min-vh-100">

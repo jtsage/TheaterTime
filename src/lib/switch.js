@@ -215,8 +215,7 @@ const DefaultRehearsal = [
 	},
 ]
 
-
-module.exports = {
+export default {
 	Stack  : SwitchStack,
 	Status : SwitchStatus,
 

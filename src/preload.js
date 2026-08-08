@@ -25,6 +25,10 @@ contextBridge.exposeInMainWorld(
 		getFilePath  : (file) => webUtils.getPathForFile(file),
 		loadConfig   : (file) => ipcRenderer.send('config:load_drop', file),
 
+		// audioPiperWASM: () => ipcRenderer.invoke('audio:piper.wasm').then((content) => URL.createObjectURL(new Blob(content, {type : 'application/wasm'}))),
+		audioPiperWASM : () => ipcRenderer.invoke('audio:piper.wasm').then((content) => URL.createObjectURL(new Blob([content], {type : 'application/wasm'}))),
+		audioPiperDATA : () => ipcRenderer.invoke('audio:piper.data').then((content) => URL.createObjectURL(new Blob([content], {type : 'application/octet-stream'}))),
+
 		receive   : ( channel, func ) => {
 			const validChannels = new Set([
 				'config',

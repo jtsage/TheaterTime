@@ -5,9 +5,9 @@
 	(c) 2026 J.T.Sage - MIT License
 */
 
-const process  = require('node:process')
-const Timers   = require('./timer.js')
-const Switches = require('./switch.js')
+import process  from 'node:process'
+import Timers   from './timer.js'
+import Switches from './switch.js'
 
 const DataDefaultSettings = {
 	audio   : {
@@ -179,6 +179,6 @@ class DataStack {
 	}
 }
 
-module.exports = {
+export default {
 	Stack  : DataStack,
 }

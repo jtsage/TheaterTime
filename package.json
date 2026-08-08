@@ -5,6 +5,7 @@
   "description": "TheaterTime OSC Timer",
   "main": "src/index.js",
   "private": true,
+  "type": "module",
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",

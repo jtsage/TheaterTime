@@ -4,7 +4,7 @@
     |_| |_|_|\___.<___| |_| \___.|_|  |_| |_||_|_|_|\___.
 	(c) 2026 J.T.Sage - MIT License
 */
-const crypto = require('node:crypto')
+import crypto from 'node:crypto'
 
 const TimerStatus = Object.freeze({
 	FINISHED : 2,
@@ -490,7 +490,7 @@ const DefaultEmpty = () => [
 	},
 ]
 
-module.exports = {
+export default {
 	Stack  : TimerStack,
 	Status : TimerStatus,
 	Type   : TimerType,

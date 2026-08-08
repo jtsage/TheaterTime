@@ -5,22 +5,26 @@
 	(c) 2026 J.T.Sage - MIT License
 */
 
+//Replace const x = require('./file') with import x from './file.js'.
+//Replace const { y } = require('./file') with import { y } from './file.js'.
 
-const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron')
-const path    = require('node:path')
-const dgram   = require('node:dgram')
-const fs      = require('node:fs')
-const ThrTime = require('./lib/thrtime.js')
-const osc     = require('simple-osc-lib')
-const appCon  = require('../package.json')
 
-const debug = !app.isPackaged && false
+import { app, BrowserWindow, ipcMain, Menu, dialog } from 'electron'
+import path    from 'node:path'
+import dgram   from 'node:dgram'
+import fs      from 'node:fs'
+import ThrTime from './lib/thrtime.js'
+import osc     from 'simple-osc-lib'
+import appCon  from '../package.json' with { type: 'json' }
+import started from 'electron-squirrel-startup'
+
+const debug = !app.isPackaged && true
 
 const autoSavePath = path.join(app.getPath('userData'), 'config')
 const autoSaveFile = path.join(autoSavePath, 'autosave.json')
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require('electron-squirrel-startup')) { app.quit() }
+if (started) { app.quit() }
 
 app.commandLine.appendSwitch('disable-features', 'WebContentsDiscard')
 app.commandLine.appendSwitch('disable-features', 'TabSuspender')
@@ -74,11 +78,11 @@ const createWindow = () => {
 		width  : 900,
 
 		webPreferences : {
-			preload :  path.join(__dirname, 'preload.js'),
+			preload :  path.join(import.meta.dirname, 'preload.js'),
 		},
 	})
 
-	mainWindow.loadFile(path.join(__dirname, 'render', 'index.html'))
+	mainWindow.loadFile(path.join(import.meta.dirname, 'render', 'index.html'))
 
 	if ( debug ) {
 		mainWindow.webContents.openDevTools({ mode : 'detach' })
@@ -151,6 +155,13 @@ app.whenReady().then(() => {
 		} catch (err) {
 			dataStack.log.push(err)
 		}
+	})
+
+	ipcMain.handle('audio:piper.wasm', () => {
+		return fs.readFileSync(path.join(import.meta.dirname, 'render', 'inc', 'piper_phonemize.wasm'))
+	})
+	ipcMain.handle('audio:piper.data', () => {
+		return fs.readFileSync(path.join(import.meta.dirname, 'render', 'inc', 'piper_phonemize.data'))
 	})
 
 	createWindow()
