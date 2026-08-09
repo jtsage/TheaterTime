@@ -101,8 +101,14 @@ function safeSend(id, data) {
 
 app.whenReady().then(() => {
 	ipcMain.on('config', outputConfig)
+
+	ipcMain.handle('configSync', () => dataStack.config)
+	ipcMain.handle('voiceList',  () => dataStack.voices)
+
 	ipcMain.on('status', outputStatus)
 	ipcMain.on('log',    outputLogger)
+
+	ipcMain.on('voiceTest', () => { dataStack.speakStack.push('Testing.  Testing, 1. 2. 3.') })
 
 	ipcMain.on('switch:save', (_, data) => {
 		dataStack.toggle.clear()
@@ -155,13 +161,6 @@ app.whenReady().then(() => {
 		} catch (err) {
 			dataStack.log.push(err)
 		}
-	})
-
-	ipcMain.handle('audio:piper.wasm', () => {
-		return fs.readFileSync(path.join(import.meta.dirname, 'render', 'inc', 'piper_phonemize.wasm'))
-	})
-	ipcMain.handle('audio:piper.data', () => {
-		return fs.readFileSync(path.join(import.meta.dirname, 'render', 'inc', 'piper_phonemize.data'))
 	})
 
 	createWindow()

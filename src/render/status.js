@@ -8,51 +8,12 @@
 */
 
 let isInit = false
-const audioSystem = {
-	blocked : false,
-	chimes  : null,
-	enabled : true,
-	stack   : [],
-	synth   : window.speechSynthesis,
-	utter   : new SpeechSynthesisUtterance(),
-}
 
 document.addEventListener('DOMContentLoaded', () => {
-	audioSystem.utter.rate = 1.1
-	audioSystem.utter.pitch = 1.12
-	audioSystem.utter.onend = () => { audioSystem.blocked = false }
-
-	for ( const voice of audioSystem.synth.getVoices() ) {
-		if ( voice.name.startsWith('Microsoft Mark') ) {
-			audioSystem.utter.voice = voice
-		} else if ( voice.name === 'Samantha' ) {
-			audioSystem.utter.voice = voice
-		}
-	}
-
 	window.ipc.status()
-
-	audioSystem.chimes = new Audio('inc/chimes.wav')
-	audioSystem.chimes.addEventListener('ended', () => {
-		audioSystem.utter.text = audioSystem.stack.shift()
-		audioSystem.synth.speak(audioSystem.utter)
-	})
-
-	setInterval(() => {
-		if ( audioSystem.stack.length !== 0 && !audioSystem.blocked ) {
-			if ( audioSystem.enabled ) {
-				audioSystem.blocked = true
-				audioSystem.chimes.play()
-			} else {
-				audioSystem.stack.length = 0
-			}
-		}
-	}, 1000)
 })
 
 window.ipc.receive('update', (data) => {
-	if ( data.spoken ) { audioSystem.stack.push(data.spoken) }
-
 	if ( !isInit ) { return }
 	for ( const timer of data.timers ) {
 		UpdateTimer(timer)

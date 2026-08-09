@@ -5,16 +5,14 @@
 	(c) 2026 J.T.Sage - MIT License
 */
 
-import process  from 'node:process'
 import Timers   from './timer.js'
 import Switches from './switch.js'
 
 const DataDefaultSettings = {
 	audio   : {
 		enabled : true,
-		name    : process.platform === 'darwin' ? 'Samantha' : 'Microsoft Mark',
-		pitch   : 1.12,
-		rate    : 1.1,
+		sinkID  : null,
+		voiceID : 'kronk-medium',
 	},
 	receive : {
 		port : 4488,
@@ -45,6 +43,15 @@ class DataStack {
 		this.toggle.add_stack(Switches.Default)
 	}
 
+	get voices() {
+		return [
+			'cortana',
+			'en_US-hfc_female-medium',
+			'en_US-hfc_male-medium',
+			'glados',
+			'kronk-medium',
+		]
+	}
 	get config() {
 		return {
 			settings    : this.settings,

@@ -6,7 +6,7 @@
 
 	Configuration Interaction
 */
-/* global bootstrap audioSystem */
+/* global bootstrap */
 
 // MARK: doc load
 document.addEventListener('DOMContentLoaded', () => {
@@ -296,7 +296,7 @@ const SwitchConfigHTML = (toggle, index, create = false) => {
 		...HTMLFormText( 'title', toggle.title, 'Title'),
 		...HTMLFormText( 'textActive', toggle.textActive, 'Active Text'),
 		...HTMLFormText( 'textInactive', toggle.textInactive, 'Inactive Text'),
-		...HTMLFormText( 'speak', toggle.speak, 'Speak'),
+		...HTMLFormText( 'speak', toggle.speak, 'Speak', 'Spoken Text.  Use \' & \' for a longer pause.'),
 
 		...HTMLToggleButton(
 			'reverseColor',
@@ -385,8 +385,7 @@ const HTMLSelectResets = (selected, skip = null) => {
 // MARK: general set
 const updateConfig = (settings) => {
 	document.getElementById('audio-enabled').checked = settings.audio.enabled
-	document.getElementById('audio-pitch').value     = settings.audio.pitch
-	document.getElementById('audio-rate').value      = settings.audio.rate
+
 	document.getElementById('receive-port').value    = settings.receive.port
 	document.getElementById('send-active').checked   = settings.send.active
 	document.getElementById('send-blink').checked    = settings.send.blink
@@ -395,30 +394,35 @@ const updateConfig = (settings) => {
 	document.getElementById('send-switch').checked   = settings.send.switch
 	document.getElementById('send-toggle').checked   = settings.send.toggle
 
-	const audioNameSelect = document.getElementById('audio-name')
-	const selectHTML      = []
-	for ( const voice of audioSystem.synth.getVoices() ) {
-		if ( ! voice.lang.startsWith('en-') ) { continue }
-		if ( voice.name === settings.audio.name ) {
-			audioSystem.utter.voice = voice
+	const audioSinkSelect = document.getElementById('audio-sinkID')
+	navigator.mediaDevices.enumerateDevices().then((devList) => {
+		const selectHTML = []
+		for ( const device of devList ) {
+			if ( device.kind !== 'audiooutput' ) { continue }
+			const isDevice = settings.audio.sinkID === device.deviceId || ( device.deviceId === 'default' && settings.audio.sinkID === null )
+			selectHTML.push(`<option value="${device.deviceId}" ${isDevice ? 'selected' : ''}>${device.label}</option>`)
 		}
-		selectHTML.push(`<option value="${voice.name}" ${settings.audio.name === voice.name ? 'selected' : ''}>${voice.name}</option>`)
-	}
-	audioNameSelect.innerHTML = selectHTML.join('')
-
-	audioSystem.utter.rate  = settings.audio.rate
-	audioSystem.utter.pitch = settings.audio.pitch
-	audioSystem.enabled = settings.audio.enabled
+		audioSinkSelect.innerHTML = selectHTML.join('')
+	})
+	const audioNameSelect = document.getElementById('audio-voiceID')
+	window.ipc.voiceList().then((voiceList) => {
+		const selectHTML      = []
+		for ( const voice of voiceList ) {
+			selectHTML.push(`<option value="${voice}" ${settings.audio.voiceID === voice ? 'selected' : ''}>${voice}</option>`)
+		}
+		audioNameSelect.innerHTML = selectHTML.join('')
+	})
 }
 
 function clientSaveConfig() {
 	winStatus.dirty = false
+	const sinkIDRaw = document.getElementById('audio-sinkID').value
+
 	const settings = {
 		audio : {
 			enabled : document.getElementById('audio-enabled').checked,
-			name    : document.getElementById('audio-name').value,
-			pitch   : document.getElementById('audio-pitch').value,
-			rate    : document.getElementById('audio-rate').value,
+			sinkID  : sinkIDRaw === 'default' ? null : sinkIDRaw,
+			voiceID : document.getElementById('audio-voiceID').value,
 		},
 		send : {
 			active : document.getElementById('send-active').checked,
@@ -438,16 +442,9 @@ function clientSaveConfig() {
 
 // MARK: test speech
 function clientTestTalk() {
-	audioSystem.utter.pitch = document.getElementById('audio-pitch').value
-	audioSystem.utter.rate  = document.getElementById('audio-rate').value
-	const newVoice = document.getElementById('audio-name').value
-	for ( const voice of audioSystem.synth.getVoices() ) {
-		if ( voice.name === newVoice ) {
-			audioSystem.utter.voice = voice
-		}
-	}
-	audioSystem.utter.text = 'Testing. Testing. 1. 2. 3.'
-	audioSystem.synth.speak(audioSystem.utter)
+	clientSaveConfig()
+	window.ipc.voiceTest()
+	window.location.reload()
 }
 
 // MARK: client buttons

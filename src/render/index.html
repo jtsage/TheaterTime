@@ -9,7 +9,7 @@
 		<script src="inc/bootstrap.min.js"></script>
 		<script src="config.js"></script>
 		<script src="status.js"></script>
-		<script src="audioSystem.js" type="module"></script>
+		<script src="inc/tts/index.js" type="module"></script>
 	</head>
 
 	<body id="body" class="min-vh-100">
@@ -65,18 +65,16 @@
 							</div>
 							<div class="input-group mb-1">
 								<span title="Voice name" class="input-group-text w-25">Speech Voice</span>
-								<select name="audio-name" id="audio-name" class="form-select">
-								</select></div>
-							<div class="input-group mb-2">
-								<label title="Pitch of speech, 0 to 2" for="audio-pitch" class="input-group-text w-25">Speech Pitch</label>
-								<input type="range" class="form-control form-range align-self-center px-2 py-4" id="audio-pitch" min="0" max="2" step="0.01">
-							</div>
-							<div class="input-group mb-2">
-								<label title="Rate of speech, 0.1 to 10" for="audio-rate" class="input-group-text w-25">Speech Rate</label>
-								<input type="range" class="form-control form-range align-self-center px-2 py-4" id="audio-rate" min="0.1" max="10" step="0.05">
+								<select name="audio-voiceID" id="audio-voiceID" class="form-select">
+								</select>
 							</div>
 
-							<button type="button" id="click-test-voice" class="btn btn-primary w-75 mb-2 mx-auto d-block">Test Voice (does not save!)</button>
+							<button type="button" id="click-test-voice" class="btn btn-primary w-75 mb-2 mx-auto d-block">Change Voice (reloads application!)</button>
+							<div class="input-group mb-1">
+								<span title="Voice name" class="input-group-text w-25">Audio Device</span>
+								<select name="audio-sinkID" id="audio-sinkID" class="form-select">
+								</select>
+							</div>
 						</div>
 					</div>
 					<div class="card mb-2">
