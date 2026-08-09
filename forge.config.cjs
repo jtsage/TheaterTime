@@ -14,6 +14,8 @@ module.exports = {
 			/^\/\.gitignore/,
 			/^\/eslint.config.mjs/,
 			/^\/README.md/,
+			/^\/piper-tts-system/,
+			/^\/qlab/,
 		],
 	},
 	rebuildConfig : {},
