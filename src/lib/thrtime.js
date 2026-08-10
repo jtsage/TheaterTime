@@ -30,7 +30,7 @@ const DataDefaultSettings = {
 
 class DataStack {
 	speakStack  = []
-	log         = []
+	logStack    = []
 	timers      = null
 	toggle      = null
 	settings    = DataDefaultSettings
@@ -41,6 +41,11 @@ class DataStack {
 
 		this.timers.add_stack(Timers.DefaultShow())
 		this.toggle.add_stack(Switches.Default)
+	}
+
+	log(process, text, level) {
+		const now = new Date()
+		this.logStack.push([process, text, level, now.toLocaleTimeString()])
 	}
 
 	get voices() {
@@ -151,29 +156,29 @@ class DataStack {
 	}
 
 	logOutputPath() {
-		this.log.push('settings updated.\n')
+		this.log('main', 'settings updated.', 0)
 		for ( const paired of this.settings.send.combo.split(',') ) {
 			const parts = paired.split(':')
-			this.log.push(`send path added: ${parts[0]}:${parts[1]}\n`)
+			this.log('main', `send path added: ${parts[0]}:${parts[1]}`, 2)
 		}
 	}
 
 	set safe_load(newConfig) {
 		for (const key of Object.keys(DataDefaultSettings.audio)) {
 			if ( ! Object.hasOwn(newConfig.settings.audio, key) ) {
-				this.log.push(`Default value for audio.${key} used (${DataDefaultSettings.audio[key]})\n`)
+				this.log('main', `Default value for audio.${key} used (${DataDefaultSettings.audio[key]})`, 0)
 				newConfig.settings.audio[key] = DataDefaultSettings.audio[key]
 			}
 		}
 		for (const key of Object.keys(DataDefaultSettings.receive)) {
 			if ( ! Object.hasOwn(newConfig.settings.receive, key) ) {
-				this.log.push(`Default value for receive.${key} used (${DataDefaultSettings.receive[key]})\n`)
+				this.log('main', `Default value for receive.${key} used (${DataDefaultSettings.receive[key]})`, 0)
 				newConfig.settings.receive[key] = DataDefaultSettings.receive[key]
 			}
 		}
 		for (const key of Object.keys(DataDefaultSettings.send)) {
 			if ( ! Object.hasOwn(newConfig.settings.send, key) ) {
-				this.log.push(`Default value for send.${key} used (${DataDefaultSettings.send[key]})\n`)
+				this.log('main', `Default value for send.${key} used (${DataDefaultSettings.send[key]})`, 0)
 				newConfig.settings.send[key] = DataDefaultSettings.send[key]
 			}
 		}

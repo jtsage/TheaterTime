@@ -21,7 +21,20 @@ window.ipc.receive('update', (data) => {
 })
 
 window.ipc.receive('log', (data) => {
-	document.getElementById('log').innerText = data.join('')
+	console.log(data)
+	const logContent = []
+	for ( item of data ) {
+		const levelClass = item[2] === 0 ? 'text-body' : item[2] === 1 ? 'text-danger' : 'text-success'
+		const itemHTML = [
+			'<div>',
+			`<span class="text-primary fw-bold">${item[3]}</span>`,
+			`<span class="text-secondary"> :: ${item[0]} :: </span>`,
+			`<span class="${levelClass}">${item[1].replaceAll(/\n/g, '<br>')}`,
+			'</div>'
+		]
+		logContent.push(itemHTML.join(''))
+	}
+	document.getElementById('log').innerHTML = logContent.join('')
 })
 
 window.ipc.receive('status', (data) => {

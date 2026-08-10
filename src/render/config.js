@@ -54,9 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
 				saveWarning.show()
 			} else {
 				if ( e.target.id === 'log-tab' ) {
-					winStatus.logInterval = setInterval(() => {
-						window.ipc.updateLog()
-					}, 1000)
+					window.ipc.updateLog()
+					// winStatus.logInterval = setInterval(() => {
+					// 	window.ipc.updateLog()
+					// }, 1000)
 				}
 				tabTrigger.show()
 			}

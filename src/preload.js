@@ -13,6 +13,8 @@ contextBridge.exposeInMainWorld(
 		config : () => ipcRenderer.send('config'),
 		status : () => ipcRenderer.send('status'),
 
+		logAudio : (text, level) => ipcRenderer.send('logAudio', text, level),
+
 		configSync : () => ipcRenderer.invoke('configSync'),
 		voiceList  : () => ipcRenderer.invoke('voiceList'),
 		voiceTest  : () => ipcRenderer.send('voiceTest'),

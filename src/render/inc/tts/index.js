@@ -100,58 +100,6 @@ const PATH_MAP = {
   "glados": "en_US-glados-medium/glados.onnx",
   "kronk-medium": "en_US-kronk-medium/kronk-medium.onnx"
 };
-async function writeBlob(url, blob) {
-  if (!url.match("https://huggingface.co")) return;
-  try {
-    const root = await navigator.storage.getDirectory();
-    const dir = await root.getDirectoryHandle("piper", {
-      create: true
-    });
-    const path = url.split("/").at(-1);
-    const file = await dir.getFileHandle(path, { create: true });
-    const writable = await file.createWritable();
-    await writable.write(blob);
-    await writable.close();
-  } catch (e) {
-    console.error(e);
-  }
-}
-async function readBlob(url) {
-  if (!url.match("https://huggingface.co")) return;
-  try {
-    const root = await navigator.storage.getDirectory();
-    const dir = await root.getDirectoryHandle("piper", {
-      create: true
-    });
-    const path = url.split("/").at(-1);
-    const file = await dir.getFileHandle(path);
-    return await file.getFile();
-  } catch (e) {
-    return void 0;
-  }
-}
-async function fetchBlob(url, callback) {
-  var _a;
-  const res = await fetch(url);
-  const reader = (_a = res.body) == null ? void 0 : _a.getReader();
-  const contentLength = +(res.headers.get("Content-Length") ?? 0);
-  let receivedLength = 0;
-  let chunks = [];
-  while (reader) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
-    }
-    chunks.push(value);
-    receivedLength += value.length;
-    callback == null ? void 0 : callback({
-      url,
-      total: contentLength,
-      loaded: receivedLength
-    });
-  }
-  return new Blob(chunks, { type: res.headers.get("Content-Type") ?? void 0 });
-}
 function pcm2wav(buffer, numChannels, sampleRate) {
   const bufferLength = buffer.length;
   const headerLength = 44;
@@ -362,6 +310,11 @@ __publicField(_TtsSession, "WASM_LOCATIONS", DEFAULT_WASM_PATHS);
 __publicField(_TtsSession, "_instance", null);
 let TtsSession = _TtsSession;
 async function getBlob(url, callback, maxRetries = 3) {
+  const realFile = url.split('/').at(-1);
+  const response = await fetch(`voice/${realFile}`);
+  return response.blob()
+
+  /*console.log(fetch(`voice/${realFile}`))
   let blob = await readBlob(url);
   if (!blob) {
     let lastError = null;
@@ -383,7 +336,7 @@ async function getBlob(url, callback, maxRetries = 3) {
       throw new Error(`Failed to fetch ${url} after ${maxRetries} attempts: ${lastError.message}`);
     }
   }
-  return blob;
+  return blob;*/
 }
 
 const audioSystem = {
@@ -402,81 +355,10 @@ const audioLog = (text, level = 0) => {
 	if ( audioSystem.debug === true ) {
 		const lastCSS = level === 0 ? 'color: white;' : level === 1 ? 'color: firebrick;' : 'color: lime';
 		const now = new Date();
+		window.ipc.logAudio(text, level);
 		// eslint-disable-next-line no-console
 		console.info(`%c${now.toLocaleTimeString()} %c:: AudioSystem :: %c${text}`, 'color: green; font-weight: bold', 'color: dimgray', lastCSS);
 	}
-};
-
-const clearLocalVoices = async () => {
-	try {
-		audioLog('Clearing Local Voice Storage', 1);
-		const root = await navigator.storage.getDirectory();
-		const dir = await root.getDirectoryHandle('piper'); // @ts-ignore
-		await dir.remove({ recursive : true });
-	} catch (err) {
-		audioLog(`Clear Voices Error: ${err.message}`, 1);
-	}
-};
-
-const listLocalVoices = async () => {
-	audioLog('Locally Stored Voices');
-	const root = await navigator.storage.getDirectory();
-	const dir = await root.getDirectoryHandle('piper', {
-		create : true,
-	});
-
-	for await (const [name, handle] of dir.entries()) {
-		audioLog(`   ${name} - ${handle.kind}`);
-	}
-};
-
-const getFileHandle = async (dir, path) => {
-	try {
-		await dir.getFileHandle(path, { create : false });
-		audioLog(`   ${path} already exists`);
-		return false
-	} catch (err) {
-		if (err.name === 'NotFoundError') {
-			audioLog(`   ${path} needs fetched`, false);
-			return dir.getFileHandle(path, { create : true })
-		}
-		throw err
-	}
-};
-
-const loadVoices = async () => {
-	const voiceFileList = await window.ipc.voiceList();
-
-	const root = await navigator.storage.getDirectory();
-	const dir = await root.getDirectoryHandle('piper', {
-		create : true,
-	});
-
-	/* eslint-disable no-await-in-loop */
-	for ( const voiceID of voiceFileList ) {
-		audioLog(`Processing ${voiceID}`);
-		const onnxPath = `${voiceID}.onnx`;
-		const jsonPath = `${voiceID}.onnx.json`;
-
-		const onnxFile  = await getFileHandle(dir, onnxPath);
-		if ( onnxFile !== false ) {
-			const onnxWrite = await onnxFile.createWritable();
-			const onnxFetch = await fetch(`./voice/${onnxPath}`);
-			const onnxBuff  = await onnxFetch.arrayBuffer();
-			await onnxWrite.write(onnxBuff);
-			await onnxWrite.close();
-		}
-
-		const jsonFile  = await getFileHandle(dir, jsonPath);
-		if ( jsonFile !== false ) {
-			const jsonWrite = await jsonFile.createWritable();
-			const jsonFetch = await fetch(`./voice/${jsonPath}`);
-			const jsonBuff  = await jsonFetch.arrayBuffer();
-			await jsonWrite.write(jsonBuff);
-			await jsonWrite.close();
-		}
-	}
-	/* eslint-enable no-await-in-loop */
 };
 
 const initSession = () => {
@@ -494,7 +376,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 		audioSystem.speakAudio.play();
 	});
 
-	await loadVoices();
+	// await loadVoices()
 	initSession();
 	TTSSpeak('Theater Time application has started.');
 
@@ -564,8 +446,7 @@ const TTSSession = (voiceID = 'en_US-hfc_female-medium') => {
 		},
 
 		logger : (message) => {
-			// eslint-disable-next-line no-console
-			console.log(`TTS: ${message}`);
+			audioLog(`TTS: ${message}`);
 		},
 	})
 };
@@ -573,7 +454,5 @@ const TTSSession = (voiceID = 'en_US-hfc_female-medium') => {
 
 window.ttsSystem = {
 	audioSystem      : audioSystem,
-	clearLocalVoices : clearLocalVoices,
-	listLocalVoices  : listLocalVoices,
 	speak            : TTSSpeak,
 };

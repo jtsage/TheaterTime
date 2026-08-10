@@ -40,7 +40,7 @@ if ( fs.existsSync(autoSaveFile) ) {
 		const fileJSON      = JSON.parse(fileRaw)
 		dataStack.safe_load = fileJSON
 	} catch (err) {
-		dataStack.log.push(err)
+		dataStack.log('main', err.message, 1)
 	}
 }
 
@@ -55,18 +55,18 @@ function openOSCListener() {
 	oscIN  = dgram.createSocket({type : 'udp4', reuseAddr : true})
 	oscIN.on('message', (msg, _rinfo) => { doOSC(msg) })
 	oscIN.on('error',   (err) => {
-		dataStack.log.push(`osc listener error:\n${err.stack}\n`)
+		dataStack.log('main', `osc listener error:\n${err.stack}`, 1)
 		oscIN.close()
 	})
 	oscIN.on('listening', () => {
 		const address = oscIN.address()
-		dataStack.log.push(`listening to osc on ${address.address}:${address.port}\n`)
+		dataStack.log('main', `listening to osc on ${address.address}:${address.port}`, 2)
 	})
 
 	try {
 		oscIN.bind(dataStack.settings.receive.port, '0.0.0.0')
 	} catch (err) {
-		dataStack.log.push(`osc listener error:\n${err.stack}\n`)
+		dataStack.log('main', `osc listener error:\n${err.stack}`, 1)
 	}
 }
 
@@ -92,7 +92,7 @@ const createWindow = () => {
 const outputConfig = () => { safeSend('config', dataStack.config) }
 const outputStatus = () => { safeSend('status', dataStack.status) }
 const outputUpdate = () => { safeSend('update', dataStack.update) }
-const outputLogger = () => { safeSend('log',    dataStack.log) }
+const outputLogger = () => { safeSend('log',    dataStack.logStack) }
 const configChange = () => { outputConfig(); outputStatus() }
 
 function safeSend(id, data) {
@@ -107,6 +107,9 @@ app.whenReady().then(() => {
 
 	ipcMain.on('status', outputStatus)
 	ipcMain.on('log',    outputLogger)
+	ipcMain.on('logAudio', (_, text, level) => {
+		dataStack.log('audioSystem', text, level)
+	})
 
 	ipcMain.on('voiceTest', () => { dataStack.speakStack.push('Testing.  Testing, 1. 2. 3.') })
 
@@ -144,7 +147,7 @@ app.whenReady().then(() => {
 		try {
 			oscIN.close()
 		} catch {
-			dataStack.log.push('Socket close failed\n')
+			dataStack.log('main', 'Socket close failed', 1)
 		}
 		openOSCListener()
 		outputConfig()
@@ -159,7 +162,7 @@ app.whenReady().then(() => {
 			openOSCListener()
 			configChange()
 		} catch (err) {
-			dataStack.log.push(err)
+			dataStack.log('main', err.message, 1)
 		}
 	})
 
@@ -227,11 +230,11 @@ const template = [
 							fs.writeFileSync(result.filePath, JSON.stringify(dataStack.config, null, 2))
 							app.addRecentDocument(result.filePath)
 						} catch (err) {
-							dataStack.log.push(err)
+							dataStack.log('main', err.message, 1)
 						}
 					}
 				}).catch((err) => {
-					dataStack.log.push(err)
+					dataStack.log('main', err.message, 1)
 				})
 			} },
 			{ accelerator : 'CommandOrControl+O', label : 'Load Configuration', click : () => {
@@ -251,11 +254,11 @@ const template = [
 							openOSCListener()
 							configChange()
 						} catch (err) {
-							dataStack.log.push(err)
+							dataStack.log('main', err.message, 1)
 						}
 					}
 				}).catch((err) => {
-					dataStack.log.push(err)
+					dataStack.log('main', err.message, 1)
 				})
 			} },
 			{ type : 'separator' },
@@ -343,7 +346,7 @@ function doOSC(packet) {
 
 		if ( !oscPacket.address.startsWith('/theaterTime') ) { return }
 
-		dataStack.log.push(`Acting on OSC : ${oscPrint(oscPacket)}\n`)
+		dataStack.log('osc', `Acting on OSC : ${oscPrint(oscPacket)}`, 0)
 
 		switch (oscPacket.address ) {
 			case '/theaterTime/switch/on' :
@@ -374,7 +377,7 @@ function doOSC(packet) {
 			}
 			default :
 				update = false
-				dataStack.log.push(`UNMATCHED : ${oscPrint(oscPacket)}\n`)
+				dataStack.log('osc', `UNMATCHED : ${oscPrint(oscPacket)}`, 0)
 		}
 	
 		if ( update ) {
@@ -383,7 +386,7 @@ function doOSC(packet) {
 			oscToggle()
 		}
 	} catch (err) {
-		dataStack.log.push(`OSC packet problem : ${err}\n`)
+		dataStack.log('osc', `OSC packet problem : ${err.message}`, 1)
 	}
 }
 
@@ -413,7 +416,7 @@ function oscSend(buffer) {
 		try {
 			oscOUT.send(buffer, 0, buffer.length, parts[1] ?? 4444, parts[0])
 		} catch (err) {
-			dataStack.log.push(`invalid sending to '${parts[0]}', port '${parts[1]}' -- ${err}\n`)
+			dataStack.log('main', `invalid sending to '${parts[0]}', port '${parts[1]}' -- ${err.message}`, 1)
 		}
 	}
 }
