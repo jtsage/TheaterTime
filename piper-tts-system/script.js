@@ -16,81 +16,10 @@ const audioLog = (text, level = 0) => {
 	if ( audioSystem.debug === true ) {
 		const lastCSS = level === 0 ? 'color: white;' : level === 1 ? 'color: firebrick;' : 'color: lime'
 		const now = new Date()
+		window.ipc.logAudio(text, level)
 		// eslint-disable-next-line no-console
 		console.info(`%c${now.toLocaleTimeString()} %c:: AudioSystem :: %c${text}`, 'color: green; font-weight: bold', 'color: dimgray', lastCSS)
 	}
-}
-
-const clearLocalVoices = async () => {
-	try {
-		audioLog('Clearing Local Voice Storage', 1)
-		const root = await navigator.storage.getDirectory()
-		const dir = await root.getDirectoryHandle('piper') // @ts-ignore
-		await dir.remove({ recursive : true })
-	} catch (err) {
-		audioLog(`Clear Voices Error: ${err.message}`, 1)
-	}
-}
-
-const listLocalVoices = async () => {
-	audioLog('Locally Stored Voices')
-	const root = await navigator.storage.getDirectory()
-	const dir = await root.getDirectoryHandle('piper', {
-		create : true,
-	})
-
-	for await (const [name, handle] of dir.entries()) {
-		audioLog(`   ${name} - ${handle.kind}`)
-	}
-}
-
-const getFileHandle = async (dir, path) => {
-	try {
-		await dir.getFileHandle(path, { create : false })
-		audioLog(`   ${path} already exists`)
-		return false
-	} catch (err) {
-		if (err.name === 'NotFoundError') {
-			audioLog(`   ${path} needs fetched`, false)
-			return dir.getFileHandle(path, { create : true })
-		}
-		throw err
-	}
-}
-
-const loadVoices = async () => {
-	const voiceFileList = await window.ipc.voiceList()
-
-	const root = await navigator.storage.getDirectory()
-	const dir = await root.getDirectoryHandle('piper', {
-		create : true,
-	})
-
-	/* eslint-disable no-await-in-loop */
-	for ( const voiceID of voiceFileList ) {
-		audioLog(`Processing ${voiceID}`)
-		const onnxPath = `${voiceID}.onnx`
-		const jsonPath = `${voiceID}.onnx.json`
-
-		const onnxFile  = await getFileHandle(dir, onnxPath)
-		if ( onnxFile !== false ) {
-			const onnxWrite = await onnxFile.createWritable()
-			const onnxFetch = await fetch(`./voice/${onnxPath}`)
-			const onnxBuff  = await onnxFetch.arrayBuffer()
-			await onnxWrite.write(onnxBuff)
-			await onnxWrite.close()
-		}
-
-		const jsonFile  = await getFileHandle(dir, jsonPath)
-		if ( jsonFile !== false ) {
-			const jsonWrite = await jsonFile.createWritable()
-			const jsonFetch = await fetch(`./voice/${jsonPath}`)
-			const jsonBuff  = await jsonFetch.arrayBuffer()
-			await jsonWrite.write(jsonBuff)
-			await jsonWrite.close()
-		}
-	}
-	/* eslint-enable no-await-in-loop */
 }
 
 const initSession = () => {
@@ -108,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 		audioSystem.speakAudio.play()
 	})
 
-	await loadVoices()
+	// await loadVoices()
 	initSession()
 	TTSSpeak('Theater Time application has started.')
 
@@ -178,8 +107,7 @@ const TTSSession = (voiceID = 'en_US-hfc_female-medium') => {
 		},
 
 		logger : (message) => {
-			// eslint-disable-next-line no-console
-			console.log(`TTS: ${message}`)
+			audioLog(`TTS: ${message}`)
 		},
 	})
 }
@@ -187,7 +115,5 @@ const TTSSession = (voiceID = 'en_US-hfc_female-medium') => {
 
 window.ttsSystem = {
 	audioSystem      : audioSystem,
-	clearLocalVoices : clearLocalVoices,
-	listLocalVoices  : listLocalVoices,
 	speak            : TTSSpeak,
 }

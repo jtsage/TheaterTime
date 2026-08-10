@@ -300,6 +300,11 @@ async function predict(config, callback) {
   return session.predict(config.text);
 }
 async function getBlob(url, callback, maxRetries = 3) {
+  const realFile = url.split('/').at(-1);
+  const response = await fetch(`voice/${realFile}`)
+  return response.blob()
+
+  /*console.log(fetch(`voice/${realFile}`))
   let blob = await readBlob(url);
   if (!blob) {
     let lastError = null;
@@ -321,7 +326,7 @@ async function getBlob(url, callback, maxRetries = 3) {
       throw new Error(`Failed to fetch ${url} after ${maxRetries} attempts: ${lastError.message}`);
     }
   }
-  return blob;
+  return blob;*/
 }
 async function download(voiceId, callback) {
   const path = PATH_MAP[voiceId];
