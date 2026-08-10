@@ -34,6 +34,7 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.11.1",
     "@electron-forge/plugin-fuses": "^7.11.1",
     "@electron/fuses": "^1.0.0",
+    "@eslint/js": "^10.0.1",
     "electron": "^43.3.0",
     "eslint": "^10.8.0",
     "eslint-plugin-unicorn": "^73.0.0",

@@ -23,7 +23,7 @@ window.ipc.receive('update', (data) => {
 window.ipc.receive('log', (data) => {
 	console.log(data)
 	const logContent = []
-	for ( item of data ) {
+	for ( const item of data ) {
 		const levelClass = item[2] === 0 ? 'text-body' : item[2] === 1 ? 'text-danger' : 'text-success'
 		const itemHTML = [
 			'<div>',
