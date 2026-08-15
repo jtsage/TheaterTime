@@ -1,0 +1,26 @@
+// Import all of Bootstrap’s CSS
+@import "bootstrap/scss/bootstrap";
+
+// Update the import directory to point to it‘s location within node_modules
+$bootstrap-icons-font-dir: "bootstrap-icons/font/fonts";
+
+// Import the Sass files as usual
+@import "bootstrap-icons/font/bootstrap-icons";
+
+.otherHead {
+	margin-top: 0em;
+	margin-bottom: 0.35em;
+	padding-right: 0.2em;
+}
+.vh-90 {
+	height: 90vh!important;
+}
+.audio-icon {
+	margin-top : -2em;
+	margin-bottom: 0.5em;
+}
+.current-icon {
+	margin-top : 0.5em;
+	margin-bottom: -2em;
+	margin-left: 0.75em;
+}
