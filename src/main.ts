@@ -3,14 +3,16 @@ import path          from 'node:path'
 import started       from 'electron-squirrel-startup'
 import dgram         from 'node:dgram'
 import fs            from 'node:fs'
-import osc           from 'simple-osc-lib'
 import appCon        from '../package.json' with { type : 'json' }
 
 import { DataStack, type TTSettings } from './lib/control'
 import { SwitchDefConfig }            from './lib/switch'
 import { TimerDef }                   from './lib/timer'
 
-const debug = true // !app.isPackaged && true
+import { OSCBundle, OSCMessage, OSCPacket } from 'simple-osc-lib'
+import { OSCTypeInteger, OSCTypeString }    from 'simple-osc-lib/dist/type'
+
+const debug = !app.isPackaged && true
 
 const autoSavePath = path.join( app.getPath( 'userData' ), 'config' )
 const autoSaveFile = path.join( autoSavePath, 'autosave.json' )
@@ -44,7 +46,6 @@ if ( fs.existsSync( autoSaveFile ) ) {
 
 let   oscIN : dgram.Socket | null  = null
 const oscOUT = dgram.createSocket( {type : 'udp4', reuseAddr : true} )
-const oscLib = new osc.simpleOscLib()
 
 openOSCListener()
 
@@ -412,15 +413,15 @@ const menu = Menu.buildFromTemplate( template )
 Menu.setApplicationMenu( menu )
 
 // MARK: OSC (recv)
-function oscPrint( oscPacket : osc.OSCMessage ) {
-	return `${oscPacket.address} ${oscPacket.args.map( ( v : osc.OSCArg ) => ['[', v.type.substring( 0, 1 ), ':', v.value, ']'].join( '' ) ).join( ' ' )}`
+function oscPrint( oscPacket : OSCMessage ) {
+	return `${oscPacket.address} ${oscPacket.args.map( ( v ) => ['[', v.type.substring( 0, 1 ), ':', v.value, ']'].join( '' ) ).join( ' ' )}`
 }
 
 function doOSC( packet : Buffer ) {
 	try {
-		const oscPacket = oscLib.readPacket( packet )
+		const oscPacket = OSCPacket.fromBuffer( packet )
 
-		if ( ! ( oscPacket instanceof osc.OSCMessage ) ) {
+		if ( oscPacket.isBundle() ) {
 			return
 		}
 
@@ -434,17 +435,17 @@ function doOSC( packet : Buffer ) {
 
 		switch ( oscPacket.address ) {
 			case '/theaterTime/switch/on' :
-				if ( oscPacket.args.length !== 0 && oscPacket.args[0].type === 'integer' ) {
+				if ( oscPacket.args.length !== 0 && oscPacket.args[0] instanceof OSCTypeInteger ) {
 					dataStack.oscOnSwitch( oscPacket.args[0].value )
 				}
 				break
 			case '/theaterTime/switch/off' :
-				if ( oscPacket.args.length !== 0 && oscPacket.args[0].type === 'integer' ) {
+				if ( oscPacket.args.length !== 0 && oscPacket.args[0] instanceof OSCTypeInteger ) {
 					dataStack.oscOffSwitch( oscPacket.args[0].value )
 				}
 				break
 			case '/theaterTime/switch/toggle' :
-				if ( oscPacket.args.length !== 0 && oscPacket.args[0].type === 'integer' ) {
+				if ( oscPacket.args.length !== 0 && oscPacket.args[0] instanceof OSCTypeInteger ) {
 					dataStack.oscToggleSwitch( oscPacket.args[0].value )
 				}
 				break
@@ -461,7 +462,7 @@ function doOSC( packet : Buffer ) {
 				dataStack.reset_all()
 				break
 			case '/theaterTime/speak' : {
-				if ( oscPacket.args.length !== 0 && oscPacket.args[0].type === 'string' ) {
+				if ( oscPacket.args.length !== 0 && oscPacket.args[0] instanceof OSCTypeString ) {
 					const speak = oscPacket.args[0].value
 					if ( speak !== null && speak !== '' ) {
 						dataStack.speakStack.push( speak )
@@ -535,18 +536,18 @@ function oscActiveTimer() {
 
 		const forceEmpty = dataStack.settings.send.blink && ( timer.type !== 1 && typeof timer.wholeSeconds === 'number' && timer.wholeSeconds < 0 && timer.wholeSeconds % 3 === 0 )
 
-		oscSend( oscLib
-			.messageBuilder( '/theaterTime/currentTimer' )
-			.integer( timer.wholeSeconds || 0 )
-			.string( forceEmpty ? '' : timer.title ?? '' )
-			.string( forceEmpty ? '' : timer.formatTime ?? '' )
-			.toBuffer()
+		oscSend(
+			new OSCMessage( '/theaterTime/currentTimer' )
+				.integer( timer.wholeSeconds || 0 )
+				.string( forceEmpty ? '' : timer.title ?? '' )
+				.string( forceEmpty ? '' : timer.formatTime ?? '' )
+				.buffer
 		)
 		if ( dataStack.settings.send.eos ) {
-			oscSend( oscLib
-				.messageBuilder( '/theaterTime/EOSTimer' )
-				.string( `${timer.title} :: ${timer.formatTime}` )
-				.toBuffer()
+			oscSend(
+				new OSCMessage( '/theaterTime/EOSTimer' )
+					.string( `${timer.title} :: ${timer.formatTime}` )
+					.buffer
 			)
 		}
 	}
@@ -560,33 +561,32 @@ function oscToggle() {
 	// EOS compatible single-string
 	if ( dataStack.settings.send.eos ) {
 		dataStack.toggle.all.map( ( element, index ) => {
-			oscSend( oscLib
-				.messageBuilder( `/theaterTime/EOSswitch/${( index+1 ).toString().padStart( 2, '0' )}` )
-				.string( element.status === 1 ? element.textActive : element.textInactive )
-				.toBuffer()
+			oscSend(
+				new OSCMessage( `/theaterTime/EOSswitch/${( index+1 ).toString().padStart( 2, '0' )}` )
+					.string( element.status === 1 ? element.textActive : element.textInactive )
+					.buffer
 			)
 		} )
 	}
 
 	// Simple method
 	if ( dataStack.settings.send.switch ) {
-		oscSend( oscLib.buildBundle( new osc.OSCBundle(
-			dataStack.toggle.all.map( ( element, index ) => oscLib
-				.messageBuilder( `/theaterTime/switch/${( index+1 ).toString().padStart( 2, '0' )}` )
-				.string( element.title )
-				.string( element.status === 1 ? element.textActive : element.textInactive )
-				.integer( element.status )
-				.toBuffer()
+		oscSend( new OSCBundle(
+			dataStack.toggle.all.map( ( element, index ) =>
+				new OSCMessage( `/theaterTime/switch/${( index+1 ).toString().padStart( 2, '0' )}` )
+					.string( element.title )
+					.string( element.status === 1 ? element.textActive : element.textInactive )
+					.integer( element.status )
 			),
-			oscLib.getTimeTagBufferFromDelta( 50/1000 )
-		) ) )
+			true
+		).buffer )
 	}
 
 	// New way of sending
 	// argument 1 : onText (if on) or empty
 	// argument 2:  offText (if off) or empty
 	if ( dataStack.settings.send.toggle ) {
-		oscSend( oscLib.buildBundle( new osc.OSCBundle(
+		oscSend( new OSCBundle(
 			dataStack.toggle.all.map( ( e, index ) => {
 				const textStrings = [
 					e.status === 1 ? e.textActive : ' ',
@@ -597,13 +597,11 @@ function oscToggle() {
 					textStrings.reverse()
 				}
 
-				return oscLib
-					.messageBuilder( `/theaterTime/toggle/${( index+1 ).toString().padStart( 2, '0' )}` )
+				return new OSCMessage( `/theaterTime/toggle/${( index+1 ).toString().padStart( 2, '0' )}` )
 					.string( textStrings[0] )
 					.string( textStrings[1] )
-					.toBuffer()
 			} ),
-			oscLib.getTimeTagBufferFromDelta( 50/1000 )
-		) ) )
+			true
+		).buffer )
 	}
 }
