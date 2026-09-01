@@ -14,7 +14,6 @@ export default defineConfig( {
 				api : 'modern-compiler',
 				silenceDeprecations : [
 					'import',
-					'mixed-decls',
 					'color-functions',
 					'global-builtin',
 				],

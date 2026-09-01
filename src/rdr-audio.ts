@@ -1,5 +1,11 @@
 import { DataStackTimerUpdate, TTSaveFile } from './lib/control.js'
-import * as tts from './piper-tts/index.js'
+import * as tts from '@jtsage/piper-tts-web'
+
+const OVERRIDE_PATH_MAP = {
+	'en_US-hfc_female-medium' : 'en/en_US/hfc_female/medium/en_US-hfc_female-medium.onnx',
+	'en_US-hfc_male-medium'   : 'en/en_US/hfc_male/medium/en_US-hfc_male-medium.onnx',
+	'kronk-medium'            : 'en_US-kronk-medium/kronk-medium.onnx',
+}
 
 interface AudioSystem {
 	blocked    : boolean,
@@ -24,6 +30,14 @@ const audioSystem : AudioSystem = {
 	stack      : [],
 	voiceID    : 'kronk-medium',
 }
+
+const fileCache = new tts.CachedFileReader( {
+	customLoader : async( url : string ) => {
+		const realFile = url.split( '/' ).at( -1 )
+		return fetch( `./${realFile}` ).then( ( response ) => response.blob() )
+	},
+	pathMap : OVERRIDE_PATH_MAP,
+} )
 
 const audioLog = ( text : string, level = 0 ) => {
 	if ( audioSystem.debug === true ) {
@@ -112,15 +126,11 @@ const TTSSession = ( voiceID = 'en_US-hfc_female-medium' ) => {
 		allowLocalModels : true, // Allow loading local models (default: true)
 		fallbackStrategy : 'local', // 'cdn', 'local', or 'auto' (default: 'cdn')
 
+		fileReader : fileCache,
+
 		wasmPaths : {
 			piperData : './piper_phonemize.data',
 			piperWasm : './piper_phonemize.wasm',
-		},
-
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		progress : ( progress : any ) => {
-			// eslint-disable-next-line no-console
-			console.log( `Loading: ${Math.round( progress.loaded * 100 / progress.total )}%` )
 		},
 
 		logger : ( message : string ) => {

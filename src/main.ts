@@ -10,7 +10,7 @@ import { SwitchDefConfig }            from './lib/switch'
 import { TimerDef }                   from './lib/timer'
 
 import { OSCBundle, OSCMessage, OSCPacket } from 'simple-osc-lib'
-import { OSCTypeInteger, OSCTypeString }    from 'simple-osc-lib/dist/type'
+import { OSCTypeInteger, OSCTypeString }    from 'simple-osc-lib/type'
 
 const debug = !app.isPackaged && true
 
