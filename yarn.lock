@@ -7499,10 +7499,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"simple-osc-lib@file:../simple-osc-lib::locator=theatertime%40workspace%3A.":
-  version: 1.9.13
-  resolution: "simple-osc-lib@file:../simple-osc-lib#../simple-osc-lib::hash=1b5bc3&locator=theatertime%40workspace%3A."
-  checksum: 10c0/4dfaf99b69d8179ff6070b865007457ad8f00b3572d4bce2a87554b16f428cfc16bc1f93ef6c400ac60da51a057888c7b01b156035118b7f4c04d121bfd6a113
+"simple-osc-lib@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "simple-osc-lib@npm:2.0.0"
+  checksum: 10c0/0fc600eddc2f6b6a5c91934cb1f9541c8db5fb1c98c1f3844518e6cb3b1f2dd95e6f74929e96e8c1c5149628acfe000ed75ac40c92130ee54dcb47d9b2fd33ee
   languageName: node
   linkType: hard
 
@@ -7912,7 +7912,7 @@ __metadata:
     jest: "npm:^29.7.0"
     onnxruntime-web: "npm:=1.22.0"
     sass: "npm:^1.102.0"
-    simple-osc-lib: "file:../simple-osc-lib"
+    simple-osc-lib: "npm:^2.0.0"
     ts-jest: "npm:^29.4.12"
     ts-node: "npm:^10.9.2"
     typescript: "npm:^6.0.3"
