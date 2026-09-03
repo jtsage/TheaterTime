@@ -90,6 +90,16 @@ export const processUpdate = ( data : DataStackTimerUpdate ) => {
 
 export const updateConfig = ( data : TTSaveFile ) => {
 	audioLog( 'Configuration data updated', 2 )
+	if ( audioSystem.voiceID !== data.settings.audio.voiceID ) {
+		audioLog( 'Voice Changed, removing old session', 2 )
+		audioSystem.voiceID = data.settings.audio.voiceID
+		tts.TtsSession._instance = null
+
+		setTimeout( () => {
+			initSession()
+			TTSSpeak( 'new voice selected' )
+		}, 500 )
+	}
 	audioSystem.sinkID  = data.settings.audio.sinkID
 	audioSystem.voiceID = data.settings.audio.voiceID
 	audioSystem.enabled = data.settings.audio.enabled

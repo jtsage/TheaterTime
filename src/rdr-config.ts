@@ -75,9 +75,6 @@ export const configStartup = () => {
 	util.listenToId( 'click-save-config', 'click', () => {
 		clientSaveConfig()
 	} )
-	util.listenToId( 'click-test-voice', 'click', () => {
-		clientTestTalk()
-	} )
 	
 	const configPane = util.getId( 'config-tab-pane' )
 	if ( configPane !== null ) {
@@ -509,14 +506,6 @@ function clientSaveConfig() {
 		},
 	}
 	window.ipc.saveSettings( settings )
-}
-
-
-// MARK: test speech
-function clientTestTalk() {
-	clientSaveConfig()
-	window.ipc.voiceTest()
-	window.location.reload()
 }
 
 // MARK: client buttons
