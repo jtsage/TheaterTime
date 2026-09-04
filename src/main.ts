@@ -12,6 +12,8 @@ import { TimerDef }                   from './lib/timer'
 import { OSCBundle, OSCMessage, OSCPacket } from 'simple-osc-lib'
 import { OSCTypeInteger, OSCTypeString }    from 'simple-osc-lib/type'
 
+import Bonjour from 'bonjour-service'
+
 const debug = !app.isPackaged && true
 
 const autoSavePath = path.join( app.getPath( 'userData' ), 'config' )
@@ -29,6 +31,8 @@ app.commandLine.appendSwitch( 'disable-background-timer-throttling' )
 let mainWindow : BrowserWindow
 
 const dataStack = new DataStack()
+const bonInstance = new Bonjour()
+
 
 if ( fs.existsSync( autoSaveFile ) ) {
 	try {
@@ -73,6 +77,13 @@ function openOSCListener() {
 
 	try {
 		oscIN.bind( dataStack.settings.receive.port, '0.0.0.0' )
+		bonInstance.unpublishAll()
+		bonInstance.publish( {
+			name : 'TheaterTime OSC Listener',
+			type : 'osc',
+			port : dataStack.settings.receive.port,
+			protocol : 'udp'
+		} )
 	} catch( err ) {
 		if ( err instanceof Error ) {
 			dataStack.log( 'main', `osc listener error:\n${err.stack}`, 1 )
