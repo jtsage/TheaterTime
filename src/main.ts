@@ -79,10 +79,10 @@ function openOSCListener() {
 		oscIN.bind( dataStack.settings.receive.port, '0.0.0.0' )
 		bonInstance.unpublishAll()
 		bonInstance.publish( {
-			name : 'TheaterTime OSC Listener',
-			type : 'osc',
-			port : dataStack.settings.receive.port,
-			protocol : 'udp'
+			name     : 'TheaterTime OSC Listener',
+			port     : dataStack.settings.receive.port,
+			protocol : 'udp',
+			type     : 'osc',
 		} )
 	} catch( err ) {
 		if ( err instanceof Error ) {
