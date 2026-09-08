@@ -3,6 +3,7 @@ import path          from 'node:path'
 import started       from 'electron-squirrel-startup'
 import dgram         from 'node:dgram'
 import fs            from 'node:fs'
+import os            from 'node:os'
 import appCon        from '../package.json' with { type : 'json' }
 
 import { DataStack, type TTSettings } from './lib/control'
@@ -32,6 +33,7 @@ let mainWindow : BrowserWindow
 
 const dataStack = new DataStack()
 const bonInstance = new Bonjour()
+let bonService : Bonjour.Service | null = null
 
 
 if ( fs.existsSync( autoSaveFile ) ) {
@@ -77,9 +79,12 @@ function openOSCListener() {
 
 	try {
 		oscIN.bind( dataStack.settings.receive.port, '0.0.0.0' )
-		bonInstance.unpublishAll()
-		bonInstance.publish( {
-			name     : 'TheaterTime OSC Listener',
+		if ( bonService !== null ) {
+			bonService.stop()
+		}
+		const computerName = os.hostname()
+		bonService = bonInstance.publish( {
+			name     : `TheaterTime OSC Listener on ${computerName}`,
 			port     : dataStack.settings.receive.port,
 			protocol : 'udp',
 			type     : 'osc',
@@ -247,12 +252,15 @@ app.on( 'window-all-closed', () => {
 } )
 
 app.on( 'before-quit', () => {
+	if ( bonService !== null ) {
+		bonService.stop()
+	}
 	autoSaveConfig()
 } )
 
 app.setAboutPanelOptions( {
 	applicationName : 'TheaterTime',
-	applicationVersion : '1.0.2',
+	applicationVersion : appCon.version,
 	copyright : 'Copyright © 2026',
 } )
 
