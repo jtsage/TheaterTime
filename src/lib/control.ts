@@ -7,13 +7,6 @@
 
 import * as Switches from './switch'
 import * as Timers   from './timer'
-// import Switches from './switch'
-
-// export type TTSettings = {
-// 	audio   : Record<string, string | boolean | null>;
-// 	receive : Record<string, number>;
-// 	send    : Record<string, string | boolean>;
-// }
 
 export type TTSettings = {
 	[key : string] : unknown,
@@ -33,6 +26,7 @@ export type TTSettings = {
 		blink          : boolean,
 		combo          : string,
 		eos            : boolean,
+		server         : number | null,
 		switch         : boolean,
 		toggle         : boolean,
 	},
@@ -55,6 +49,7 @@ const DataDefaultSettings : TTSettings = {
 	},
 	send  : {
 		combo : '127.0.0.1:4444',
+		server : 4242,
 
 		active : true,
 		blink  : true,

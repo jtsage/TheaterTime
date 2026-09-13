@@ -77,6 +77,11 @@
 								<div class="form-text text-end pe-2 mt-0 w-100">Ex: 127.0.0.1:4444,192.168.10.10:8000 (no spaces)</div>
 								<div id="send-combo-error" class="d-none form-text text-danger text-end pe-2 mt-0 w-100">Only supports digits (0-9), dot (.), colon (:), and comma (,)</div>
 							</div>
+							<div class="input-group mb-2">
+								<span class="input-group-text w-25">TCP SLIP(1.1) Server Port</span>
+								<input type="number" class="form-control" min="1024" max="65545" id="send-server">
+								<div class="form-text text-end pe-2 mt-0 w-100">1024-65535</div>
+							</div>
 							<div class="input-group mb-3">
 								<span class="input-group-text w-75">Switches</span>
 								<input type="checkbox" class="btn-check" id="send-switch">

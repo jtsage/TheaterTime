@@ -445,6 +445,7 @@ const updateConfigPane = ( settings : TTSettings ) => {
 	util.setFormCheck( 'send-active', settings.send.active )
 	util.setFormCheck( 'send-blink',  settings.send.blink )
 	util.setFormValue( 'send-combo',  settings.send.combo )
+	util.setFormValue( 'send-server',  settings.send.server === null ? '' : String( settings.send.server ) )
 	util.setFormCheck( 'send-eos',    settings.send.eos )
 	util.setFormCheck( 'send-switch', settings.send.switch )
 	util.setFormCheck( 'send-toggle', settings.send.toggle )
@@ -498,12 +499,16 @@ function clientSaveConfig() {
 			blink  : util.getFormCheck( 'send-blink' ),
 			combo  : util.getFormValue( 'send-combo' ) ?? '',
 			eos    : util.getFormCheck( 'send-eos' ),
+			server : parseInt( util.getFormValue( 'send-server' ) ?? '0', 10 ),
 			switch : util.getFormCheck( 'send-switch' ),
 			toggle : util.getFormCheck( 'send-toggle' ),
 		},
 		receive : {
 			port : parseInt( util.getFormValue( 'receive-port' ) ?? '0', 10 ),
 		},
+	}
+	if ( settings.send.server === 0 ) {
+		settings.send.server = null
 	}
 	window.ipc.saveSettings( settings )
 }

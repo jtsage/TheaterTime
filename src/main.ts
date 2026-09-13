@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, Menu, dialog, OpenDialogOptions } from 'el
 import path          from 'node:path'
 import started       from 'electron-squirrel-startup'
 import dgram         from 'node:dgram'
+import net           from 'node:net'
 import fs            from 'node:fs'
 import os            from 'node:os'
 import appCon        from '../package.json' with { type : 'json' }
@@ -9,6 +10,7 @@ import appCon        from '../package.json' with { type : 'json' }
 import { DataStack, type TTSettings } from './lib/control'
 import { SwitchDefConfig }            from './lib/switch'
 import { TimerDef }                   from './lib/timer'
+import * as frame                     from './lib/tcp-frame'
 
 import { OSCBundle, OSCMessage, OSCPacket } from 'simple-osc-lib'
 import { OSCTypeInteger, OSCTypeString }    from 'simple-osc-lib/type'
@@ -33,7 +35,8 @@ let mainWindow : BrowserWindow
 
 const dataStack = new DataStack()
 const bonInstance = new Bonjour()
-let bonService : Bonjour.Service | null = null
+let bonServiceUDP : Bonjour.Service | null = null
+let bonServiceTCP : Bonjour.Service | null = null
 
 
 if ( fs.existsSync( autoSaveFile ) ) {
@@ -50,11 +53,90 @@ if ( fs.existsSync( autoSaveFile ) ) {
 	}
 }
 
-let   oscIN : dgram.Socket | null  = null
+let   oscIN      : dgram.Socket | null  = null
+let   oscServe   : net.Server | null = null
+const socketList : Set<net.Socket> = new Set()
 const oscOUT = dgram.createSocket( {type : 'udp4', reuseAddr : true} )
 
-openOSCListener()
+const slipDecode = new frame.TCPTransportDecoder(
+	( msg ) => doOSC( msg ),
+	'1.1'
+)
 
+openOSCListener()
+openOSCServer()
+
+function closeOSCServer() {
+	if ( oscServe !== null ) {
+		for ( const socket of socketList ) {
+			socket.destroySoon()
+		}
+		oscServe.close()
+		oscServe = null
+	}
+}
+
+function openOSCServer() {
+	if ( dataStack.settings.send.server === null ) return
+	closeOSCServer()
+	oscServe = net.createServer( ( socket ) => {
+		socketList.add( socket )
+
+		socket.on( 'end', () => {
+			dataStack.log( 'osc-serve', `${socket.remoteAddress}:${socket.remotePort} disconnected`, 2 )
+			socketList.delete( socket )
+		} )
+		socket.on( 'error', ( err 	) => {
+			if ( err instanceof Error ) {
+				dataStack.log( 'osc-serve', `${socket.remoteAddress}:${socket.remotePort} error : ${err.message}`, 1 )
+			} else {
+				dataStack.log( 'osc-serve', `${socket.remoteAddress}:${socket.remotePort} unknown error`, 1 )
+			}
+		} )
+		
+		socket.on( 'data', ( buffer ) => {
+			const thisBuffer = typeof buffer === 'string' ? Buffer.from( buffer ) : buffer
+
+			slipDecode.consume( thisBuffer )
+		} )
+	} )
+
+	oscServe.on( 'error', ( err ) => {
+		dataStack.log( 'osc-serve', `server error, closing :: ${err.message}`, 1 )
+	} )
+
+	oscServe.on( 'close', () => {
+		dataStack.log( 'osc-serve', 'server closed', 2 )
+	} )
+
+	oscServe.on( 'listening', () => {
+		dataStack.log( 'osc-serve', `server opened on port ${dataStack.settings.send.server}`, 2 )
+	} )
+
+	oscServe.on( 'connection', ( socket ) => {
+		dataStack.log( 'osc-serve', `client connected :: ${socket.remoteAddress}`, 2 )
+	} )
+
+	oscServe.listen( dataStack.settings.send.server, '0.0.0.0' )
+
+	if ( bonServiceTCP !== null ) {
+		bonServiceTCP.stop()
+	}
+	const computerName = os.hostname()
+	bonServiceTCP = bonInstance.publish( {
+		name     : `TheaterTime OSC TCP on ${computerName}`,
+		port     : dataStack.settings.send.server,
+		protocol : 'tcp',
+		txt      : {
+			appver   : appCon.version,
+			name     : 'OSC',
+			oscver   : '1.1',
+			platform : 'electron',
+			ver      : '1.0',
+		},
+		type     : 'osc',
+	} )
+}
 
 function openOSCListener() {
 	oscIN  = dgram.createSocket( {type : 'udp4', reuseAddr : true} )
@@ -79,11 +161,11 @@ function openOSCListener() {
 
 	try {
 		oscIN.bind( dataStack.settings.receive.port, '0.0.0.0' )
-		if ( bonService !== null ) {
-			bonService.stop()
+		if ( bonServiceUDP !== null ) {
+			bonServiceUDP.stop()
 		}
 		const computerName = os.hostname()
-		bonService = bonInstance.publish( {
+		bonServiceUDP = bonInstance.publish( {
 			name     : `TheaterTime OSC Listener on ${computerName}`,
 			port     : dataStack.settings.receive.port,
 			protocol : 'udp',
@@ -204,6 +286,7 @@ app.whenReady().then( () => {
 			dataStack.log( 'main', 'Socket close failed', 1 )
 		}
 		openOSCListener()
+		openOSCServer()
 		outputConfig()
 	} )
 
@@ -216,6 +299,7 @@ app.whenReady().then( () => {
 				oscIN.close()
 			}
 			openOSCListener()
+			openOSCServer()
 			configChange()
 		} catch( err ) {
 			if ( err instanceof Error ) {
@@ -252,8 +336,11 @@ app.on( 'window-all-closed', () => {
 } )
 
 app.on( 'before-quit', () => {
-	if ( bonService !== null ) {
-		bonService.stop()
+	if ( bonServiceUDP !== null ) {
+		bonServiceUDP.stop()
+	}
+	if ( bonServiceTCP !== null ) {
+		bonServiceTCP.stop()
 	}
 	autoSaveConfig()
 } )
@@ -331,6 +418,7 @@ const template : Electron.MenuItemConstructorOptions[] = [
 									oscIN.close()
 								}
 								openOSCListener()
+								openOSCServer()
 								configChange()
 							} catch( err ) {
 								if ( err instanceof Error ) {
@@ -529,6 +617,14 @@ function autoSaveConfig() {
 
 // MARK: OSC (send)
 function oscSend( buffer : Buffer ) {
+	if ( oscServe !== null && socketList.size !== 0 ) {
+		for ( const socket of socketList ) {
+			if ( socket.writable ) {
+				socket.write( frame.encodeSLIP( buffer ) )
+			}
+		}
+	}
+
 	const sendDest = typeof dataStack.settings.send.combo === 'string' ? dataStack.settings.send.combo : ''
 	for ( const paired of sendDest.split( ',' ) ) {
 		const parts = paired.split( ':' )
