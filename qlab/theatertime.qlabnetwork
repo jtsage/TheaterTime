@@ -6,10 +6,15 @@
 	"messageType": "OSC",
 	"network": [
 		{
+			"transport": "TCP",
+			"defaultPort": 4242,
+			"canEditPort": true
+		},
+		{
 			"transport": "UDP",
 			"defaultPort": 4488,
 			"canEditPort": true
-		}
+		},
 	],
 	"parameters": [
 		{

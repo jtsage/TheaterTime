@@ -224,9 +224,13 @@ export class DataStack {
 	logOutputPath() {
 		this.log( 'main', 'settings updated.', 0 )
 		const sendMap = this.settings.send.combo as string
+		if ( sendMap === '' ) {
+			this.log( 'osc-udp', 'no UDP destinations set', 2 )
+			return
+		}
 		for ( const paired of sendMap.split( ',' ) ) {
 			const parts = paired.split( ':' )
-			this.log( 'main', `send path added: ${parts[0]}:${parts[1]}`, 2 )
+			this.log( 'osc-udp', `send path added: ${parts[0]}:${parts[1]}`, 2 )
 		}
 	}
 

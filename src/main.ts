@@ -146,7 +146,7 @@ function openOSCListener() {
 	} )
 
 	oscIN.on( 'error',   ( err ) => {
-		dataStack.log( 'main', `osc listener error:\n${err.stack}`, 1 )
+		dataStack.log( 'osc-udp', `osc listener error:\n${err.stack}`, 1 )
 		if ( oscIN !== null ) {
 			oscIN.close()
 		}
@@ -155,7 +155,7 @@ function openOSCListener() {
 	oscIN.on( 'listening', () => {
 		if ( oscIN !== null ) {
 			const address = oscIN.address()
-			dataStack.log( 'main', `listening to osc on ${address.address}:${address.port}`, 2 )
+			dataStack.log( 'osc-udp', `listening to osc on ${address.address}:${address.port}`, 2 )
 		}
 	} )
 
@@ -173,9 +173,9 @@ function openOSCListener() {
 		} )
 	} catch( err ) {
 		if ( err instanceof Error ) {
-			dataStack.log( 'main', `osc listener error:\n${err.stack}`, 1 )
+			dataStack.log( 'osc-udp', `osc listener error:\n${err.stack}`, 1 )
 		} else {
-			dataStack.log( 'main', `osc unknown error ${String( err )}`, 1 )
+			dataStack.log( 'osc-udp', `osc unknown error ${String( err )}`, 1 )
 		}
 	}
 }
@@ -283,7 +283,7 @@ app.whenReady().then( () => {
 				oscIN.close()
 			}
 		} catch {
-			dataStack.log( 'main', 'Socket close failed', 1 )
+			dataStack.log( 'osc-udp', 'Socket close failed', 1 )
 		}
 		openOSCListener()
 		openOSCServer()
@@ -626,6 +626,7 @@ function oscSend( buffer : Buffer ) {
 	}
 
 	const sendDest = typeof dataStack.settings.send.combo === 'string' ? dataStack.settings.send.combo : ''
+	if ( sendDest === '' ) return
 	for ( const paired of sendDest.split( ',' ) ) {
 		const parts = paired.split( ':' )
 		const port  = parseInt( parts[1] ) ?? 4444
@@ -633,9 +634,9 @@ function oscSend( buffer : Buffer ) {
 			oscOUT.send( buffer, 0, buffer.length, port, parts[0] )
 		} catch( err ) {
 			if ( err instanceof Error ) {
-				dataStack.log( 'osc', `invalid sending to '${parts[0]}', port '${parts[1]} -- ${err.message}`, 1 )
+				dataStack.log( 'osc-udp', `invalid sending to '${parts[0]}', port '${parts[1]} -- ${err.message}`, 1 )
 			} else {
-				dataStack.log( 'osc', `invalid sending to '${parts[0]}', port '${parts[1]}`, 1 )
+				dataStack.log( 'osc-udp', `invalid sending to '${parts[0]}', port '${parts[1]}`, 1 )
 			}
 		}
 	}
