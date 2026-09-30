@@ -195,7 +195,7 @@ const save_timer = () => {
 
 	for ( const form of container.getElementsByTagName( 'form' ) ) {
 		const formData = new FormData( form )
-		const jsonData : TimerDef = { ...TimerBlank }
+		const jsonData : TimerDef = structuredClone( TimerBlank )
 
 		for ( const pair of formData.entries() ) {
 			if ( pair[0].substring( 0, 16 ) === 'reset_switches--' ) {
@@ -241,7 +241,7 @@ const save_switch = () => {
 
 	for ( const form of container.getElementsByTagName( 'form' ) ) {
 		const formData = new FormData( form )
-		const jsonData : SwitchDef = { ...SwitchBlank }
+		const jsonData : SwitchDef = structuredClone( SwitchBlank )
 
 		for ( const pair of formData.entries() ) {
 			if ( pair[0].substring( 0, 16 ) === 'reset_switches--' ) {
